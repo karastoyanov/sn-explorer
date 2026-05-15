@@ -1,0 +1,24 @@
+# Credentials — never commit
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+frontend/dist/
+
+# macOS
+.DS_Store
+.vscode
+.claude/
+
+# Data
+backend/scripts/data/
+backend/modules/discovery/data/
+backend/modules/service_mapping/data/
