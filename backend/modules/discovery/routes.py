@@ -180,27 +180,22 @@ def get_classifier(clf_id):
 
 # ── AI chat ────────────────────────────────────────────────────────────────────
 
-@blueprint.route("/chat", methods=["POST"])
-def chat_endpoint():
+@blueprint.route("/chat/context", methods=["POST"])
+def chat_context():
+    """Return the RAG-enriched system prompt for a given query.
+
+    The frontend calls OpenAI directly with the user's own API key.
+    This endpoint only returns retrieved context — no API key is stored here.
+    """
     from . import chat as ai
 
-    data     = request.get_json(silent=True) or {}
-    messages = data.get("messages", [])
+    data  = request.get_json(silent=True) or {}
+    query = data.get("query", "")
 
-    if not messages:
-        return jsonify({"error": "messages required"}), 400
+    if not query:
+        return jsonify({"error": "query required"}), 400
 
-    def generate():
-        try:
-            for chunk in ai.stream_chat(messages):
-                yield f"data: {json.dumps({'text': chunk})}\n\n"
-        except Exception as exc:
-            LOG.exception("Chat error")
-            yield f"data: {json.dumps({'error': str(exc)})}\n\n"
-        yield "data: [DONE]\n\n"
+    ai._load_data()
+    system = ai._BASE_SYSTEM + "\n\n" + ai._build_context(query)
 
-    return Response(
-        stream_with_context(generate()),
-        mimetype="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
+    return jsonify({"system": system})
