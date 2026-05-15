@@ -30,13 +30,40 @@ export const modulesApi = {
 }
 
 export const chatApi = {
-  async stream(messages, onChunk) {
-    const res = await fetch('/api/discovery/chat', {
+  /** Fetch RAG-enriched system prompt from the backend (no API key involved). */
+  async getContext(query) {
+    const res = await fetch('/api/discovery/chat/context', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ messages }),
+      body:    JSON.stringify({ query }),
     })
-    if (!res.ok) throw new Error(`API ${res.status}: /discovery/chat`)
+    if (!res.ok) throw new Error(`Failed to load context (${res.status})`)
+    return res.json()  // { system: string }
+  },
+
+  /**
+   * Call OpenAI's chat completions API directly from the browser.
+   * The API key is provided by the caller and never sent to our backend.
+   */
+  async stream(apiKey, systemPrompt, messages, onChunk) {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model:      'gpt-4o-mini',
+        max_tokens: 1024,
+        stream:     true,
+        messages:   [{ role: 'system', content: systemPrompt }, ...messages],
+      }),
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error?.message || `OpenAI error ${res.status}`)
+    }
 
     const reader  = res.body.getReader()
     const decoder = new TextDecoder()
@@ -55,12 +82,9 @@ export const chatApi = {
         const payload = line.slice(6)
         if (payload === '[DONE]') return
         try {
-          const parsed = JSON.parse(payload)
-          if (parsed.error) throw new Error(parsed.error)
-          if (parsed.text)  onChunk(parsed.text)
-        } catch (e) {
-          if (e.message !== 'Unexpected token') throw e
-        }
+          const content = JSON.parse(payload).choices?.[0]?.delta?.content
+          if (content) onChunk(content)
+        } catch {}
       }
     }
   },
