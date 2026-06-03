@@ -30,12 +30,15 @@ export const modulesApi = {
 }
 
 export const chatApi = {
-  /** Fetch RAG-enriched system prompt from the backend (no API key involved). */
-  async getContext(query) {
+  /**
+   * Fetch RAG-enriched system prompt from the backend (no API key involved).
+   * Passes full message history so the backend can use prior turns for retrieval.
+   */
+  async getContext(query, messages = []) {
     const res = await fetch('/api/discovery/chat/context', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ query }),
+      body:    JSON.stringify({ query, messages }),
     })
     if (!res.ok) throw new Error(`Failed to load context (${res.status})`)
     return res.json()  // { system: string }

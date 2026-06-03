@@ -262,7 +262,7 @@ export default function ChatPanel({ open, onClose }) {
     setLoading(true)
 
     try {
-      const { system } = await chatApi.getContext(question)
+      const { system } = await chatApi.getContext(question, nextHistory)
       await chatApi.stream(apiKey, system, nextHistory, chunk => {
         setMessages(prev => {
           const updated = [...prev]
