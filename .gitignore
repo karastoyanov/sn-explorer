@@ -22,4 +22,5 @@ frontend/dist/
 backend/scripts/data/
 backend/modules/discovery/data/
 backend/modules/service_mapping/data/
-*docs/
+docs/*.png
+docs/*.excalidraw
