@@ -16,6 +16,25 @@ _classifiers: list | None = None
 _stages:      list | None = None
 _ire:         dict | None = None
 
+# BM25 indices (populated at load time, requires rank-bm25)
+_pat_bm25 = None
+_clf_bm25 = None
+
+# Semantic search (populated at load time, requires sentence-transformers)
+_sem_model      = None
+_pat_embeddings = None   # np.ndarray (N, D)
+_clf_embeddings = None   # np.ndarray (M, D)
+
+# Keywords that trigger inclusion of static reference sections
+_STAGE_KWORDS = frozenset({
+    'stage', 'stages', 'scanning', 'classification', 'exploration',
+    'probe', 'sensor', 'pipeline', 'ecc', 'queue', 'l1', 'l2', 'l3',
+})
+_IRE_KWORDS = frozenset({
+    'ire', 'reconciliation', 'duplicate', 'dedup', 'precedence',
+    'serial', 'identification', 'merge', 'conflict',
+})
+
 
 # ── Client ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +49,60 @@ def _get_client():
     return _client
 
 
+# ── Tokenisation ──────────────────────────────────────────────────────────────
+
+def _tokens(text: str) -> list[str]:
+    return [t for t in re.findall(r"\w+", text.lower()) if len(t) > 2]
+
+
+# ── Document text builders ────────────────────────────────────────────────────
+
+def _pat_doc_text(p: dict) -> str:
+    parts = [
+        p.get("name", ""),
+        p.get("mainCi", ""),
+        p.get("protocol", ""),
+        p.get("credentialType", ""),
+        p.get("category", ""),
+        p.get("description", ""),
+        p.get("discoveryType", ""),
+    ]
+    ndl = p.get("ndl") or {}
+    for step in ndl.get("steps", []):
+        parts.append(step.get("name", ""))
+        for op in step.get("operations", []):
+            if op.get("targetTable"):
+                parts.append(op["targetTable"])
+            if op.get("setFields"):
+                parts.extend(op["setFields"])
+            if op.get("targetColumns"):
+                parts.append(op["targetColumns"])
+    for rel in ndl.get("relations", []):
+        parts.extend([
+            rel.get("table1", ""),
+            rel.get("table2", ""),
+            rel.get("relationshipType", ""),
+            rel.get("refField", ""),
+        ])
+    for t in ndl.get("tablesPopulated", []):
+        parts.append(t.get("table", ""))
+        parts.extend(t.get("columns", []))
+    return " ".join(filter(None, parts))
+
+
+def _clf_doc_text(c: dict) -> str:
+    parts = [
+        c.get("name", ""),
+        c.get("ciTable", ""),
+        c.get("ciTableLabel", ""),
+        c.get("type", ""),
+    ]
+    for cr in (c.get("criteria") or []):
+        parts.append(cr.get("criterion", ""))
+        parts.append(cr.get("value", ""))
+    return " ".join(filter(None, parts))
+
+
 # ── Data loading ──────────────────────────────────────────────────────────────
 
 def _read_json(path: Path):
@@ -37,13 +110,14 @@ def _read_json(path: Path):
 
 
 def _load_data():
-    """Load all JSON data files into memory (runs once on first request)."""
+    """Load JSON files and build BM25 + semantic indices (runs once on first request)."""
     global _patterns, _classifiers, _stages, _ire
+    global _pat_bm25, _clf_bm25, _sem_model, _pat_embeddings, _clf_embeddings
 
     if _patterns is not None:
         return
 
-    # Patterns — prefer extracted file, fall back to bundled
+    # ── Patterns ──
     patterns_path = _DATA_DIR / "patterns_all.json"
     if not patterns_path.exists():
         patterns_path = _LOCAL_DIR / "patterns.json"
@@ -56,7 +130,7 @@ def _load_data():
         _patterns = []
         LOG.warning("No patterns file found — pattern context will be empty")
 
-    # Classifiers
+    # ── Classifiers ──
     clf_path = _DATA_DIR / "classifiers_all.json"
     if clf_path.exists():
         raw          = _read_json(clf_path)
@@ -66,108 +140,238 @@ def _load_data():
         _classifiers = []
         LOG.warning("No classifiers file found — classifier context will be empty")
 
-    # Stages and IRE — small files, always loaded in full
+    # ── Static reference docs ──
     _stages = _read_json(_LOCAL_DIR / "stages.json")
     _ire    = _read_json(_LOCAL_DIR / "ire.json")
 
-    # Service Mapping data (loaded when the module provides it)
-    sm_dir = Path(__file__).parent.parent / "service_mapping" / "data"
-    if sm_dir.exists():
-        for f in sm_dir.glob("*.json"):
-            LOG.info("Service Mapping data available: %s", f.name)
+    # ── Tier 1: BM25 indices ──
+    try:
+        from rank_bm25 import BM25Okapi
+        if _patterns:
+            _pat_bm25 = BM25Okapi([_tokens(_pat_doc_text(p)) for p in _patterns])
+        if _classifiers:
+            _clf_bm25 = BM25Okapi([_tokens(_clf_doc_text(c)) for c in _classifiers])
+        LOG.info("BM25 indices built (%d patterns, %d classifiers)", len(_patterns), len(_classifiers))
+    except ImportError:
+        LOG.warning("rank-bm25 not installed — falling back to keyword search. Run: pip install rank-bm25")
+
+    # ── Tier 2: Semantic embeddings (graceful degradation) ──
+    try:
+        from sentence_transformers import SentenceTransformer
+        _sem_model = SentenceTransformer("all-MiniLM-L6-v2")
+        LOG.info("Encoding %d patterns + %d classifiers for semantic search…", len(_patterns), len(_classifiers))
+        if _patterns:
+            _pat_embeddings = _sem_model.encode(
+                [_pat_doc_text(p) for p in _patterns],
+                convert_to_numpy=True, show_progress_bar=False,
+            )
+        if _classifiers:
+            _clf_embeddings = _sem_model.encode(
+                [_clf_doc_text(c) for c in _classifiers],
+                convert_to_numpy=True, show_progress_bar=False,
+            )
+        LOG.info("Semantic index ready")
+    except ImportError:
+        LOG.warning(
+            "sentence-transformers not installed — semantic search disabled. "
+            "Run: pip install sentence-transformers"
+        )
 
 
-# ── Search ────────────────────────────────────────────────────────────────────
+# ── Search (Tier 1 + 2 + 3) ──────────────────────────────────────────────────
 
-def _tokens(text: str) -> list[str]:
-    return [t for t in re.findall(r"\w+", text.lower()) if len(t) > 2]
+def _cosine_sim(q_vec, doc_matrix):
+    import numpy as np
+    q     = q_vec / (np.linalg.norm(q_vec) + 1e-8)
+    norms = np.linalg.norm(doc_matrix, axis=1, keepdims=True) + 1e-8
+    return (doc_matrix / norms) @ q
 
 
-def _search_patterns(query: str, limit: int = 15) -> list:
+def _rrf(ranked_lists: list[list[int]], k: int = 60) -> list[int]:
+    """Reciprocal Rank Fusion — merge multiple ranked index lists into one."""
+    scores: dict[int, float] = {}
+    for ranked in ranked_lists:
+        for rank, idx in enumerate(ranked):
+            scores[idx] = scores.get(idx, 0.0) + 1.0 / (k + rank + 1)
+    return [idx for idx, _ in sorted(scores.items(), key=lambda x: -x[1])]
+
+
+def _keyword_fallback(query: str, items: list, doc_fn, limit: int) -> list:
+    """Simple substring frequency search — last resort when no index is available."""
     toks = _tokens(query)
     if not toks:
         return []
     scored = []
-    for p in _patterns:
-        name  = (p.get("name", "")           or "").lower()
-        ci    = (p.get("mainCi", "")         or "").lower()
-        proto = (p.get("protocol", "")       or "").lower()
-        cred  = (p.get("credentialType", "") or "").lower()
-        cat   = (p.get("category", "")       or "").lower()
-        desc  = (p.get("description", "")    or "").lower()
-        score = sum(
-            (3 if t in name else 0) +
-            (2 if t in ci   else 0) +
-            (3 if t in proto else 0) +
-            (2 if t in cred  else 0) +
-            (1 if t in cat   else 0) +
-            (1 if t in desc  else 0)
-            for t in toks
-        )
+    for item in items:
+        text  = doc_fn(item).lower()
+        score = sum(text.count(t) for t in toks)
         if score > 0:
-            scored.append((score, p))
+            scored.append((score, item))
     scored.sort(key=lambda x: -x[0])
-    return [p for _, p in scored[:limit]]
+    return [item for _, item in scored[:limit]]
 
 
-def _search_classifiers(query: str, limit: int = 10) -> list:
-    toks = _tokens(query)
-    if not toks:
+def _hybrid_search(query: str, items: list, bm25_idx, embeddings, doc_fn, limit: int) -> list:
+    """Tier 3 hybrid: BM25 + semantic with RRF merge; degrades gracefully."""
+    if not items:
         return []
-    scored = []
-    for c in _classifiers:
-        name  = (c.get("name", "")         or "").lower()
-        table = (c.get("ciTable", "")      or "").lower()
-        label = (c.get("ciTableLabel", "") or "").lower()
-        ctype = (c.get("type", "")         or "").lower()
-        score = sum(
-            (3 if t in name  else 0) +
-            (2 if t in table else 0) +
-            (2 if t in label else 0) +
-            (1 if t in ctype else 0)
-            for t in toks
-        )
-        if score > 0:
-            scored.append((score, c))
-    scored.sort(key=lambda x: -x[0])
-    return [c for _, c in scored[:limit]]
+
+    pool = min(len(items), limit * 4)
+    ranked_lists: list[list[int]] = []
+
+    # BM25
+    if bm25_idx is not None:
+        toks = _tokens(query)
+        if toks:
+            scores      = bm25_idx.get_scores(toks)
+            bm25_ranked = [int(i) for i in scores.argsort()[::-1][:pool] if scores[i] > 0]
+            if bm25_ranked:
+                ranked_lists.append(bm25_ranked)
+
+    # Semantic
+    if embeddings is not None and _sem_model is not None and len(embeddings) > 0:
+        q_vec      = _sem_model.encode(query, convert_to_numpy=True)
+        sims       = _cosine_sim(q_vec, embeddings)
+        sem_ranked = [int(i) for i in sims.argsort()[::-1][:pool]]
+        ranked_lists.append(sem_ranked)
+
+    if not ranked_lists:
+        return _keyword_fallback(query, items, doc_fn, limit)
+    if len(ranked_lists) == 1:
+        return [items[i] for i in ranked_lists[0][:limit]]
+
+    # Tier 3: RRF merge
+    return [items[i] for i in _rrf(ranked_lists)[:limit]]
 
 
-# ── Compact serialisers ───────────────────────────────────────────────────────
-
-def _fmt_pattern(p: dict) -> dict:
-    return {
-        "id":             p.get("id", ""),
-        "name":           p.get("name", ""),
-        "category":       p.get("category", ""),
-        "discoveryType":  p.get("discoveryType", p.get("type", "")),
-        "protocol":       p.get("protocol", ""),
-        "port":           p.get("port", ""),
-        "credentialType": p.get("credentialType", ""),
-        "mainCi":         p.get("mainCi", ""),
-        "description":    p.get("description", ""),
-        "active":         p.get("active", True),
-    }
+def _search_patterns(query: str, limit: int = 10) -> list:
+    return _hybrid_search(query, _patterns, _pat_bm25, _pat_embeddings, _pat_doc_text, limit)
 
 
-def _fmt_classifier(c: dict) -> dict:
-    result = {
-        "id":            c.get("id", ""),
-        "name":          c.get("name", ""),
-        "ciTable":       c.get("ciTable", ""),
-        "ciTableLabel":  c.get("ciTableLabel", ""),
-        "type":          c.get("type", ""),
-        "active":        c.get("active", True),
-        "matchCriteria": c.get("matchCriteria", ""),
-        "criteriaCount": c.get("criteriaCount", 0),
-    }
-    criteria = (c.get("criteria") or [])[:5]
+def _search_classifiers(query: str, limit: int = 8) -> list:
+    return _hybrid_search(query, _classifiers, _clf_bm25, _clf_embeddings, _clf_doc_text, limit)
+
+
+# ── Retrieval query builder (Tier 1) ─────────────────────────────────────────
+
+def _build_retrieval_query(messages: list[dict]) -> str:
+    """Concatenate the last 3 user turns to handle follow-up questions."""
+    user_msgs = [m["content"] for m in messages if m.get("role") == "user"]
+    return " ".join(user_msgs[-3:]) if user_msgs else ""
+
+
+# ── Prose formatters (Tier 4) ─────────────────────────────────────────────────
+
+def _op_summary(op: dict) -> str:
+    t = op.get("type", "")
+    if t == "transform":
+        fields = ", ".join(op.get("setFields") or [])
+        return f"transform {op.get('srcTable','?')} → {op.get('targetTable','?')} [{fields}]"
+    if t == "relation_reference":
+        rt = op.get("relationshipType") or f"ref field: {op.get('refField','?')}"
+        k1 = f"[key:{op['key1']}]" if op.get("key1") else ""
+        k2 = f"[key:{op['key2']}]" if op.get("key2") else ""
+        return f"relation {op.get('table1','?')}{k1} → {op.get('table2','?')}{k2} ({rt})"
+    if t == "merge":
+        return f"merge {op.get('table1','?')} + {op.get('table2','?')} → {op.get('resultTable','?')}"
+    if t == "custom_operation":
+        cols = op.get("targetColumns") or ""
+        tgt  = op.get("targetTable") or "response"
+        if cols and len(cols) > 100:
+            cols = cols[:97] + "…"
+        return f"api_call → {tgt}" + (f" [{cols}]" if cols else "")
+    if t == "set_attr":
+        return f"set_attr: {op.get('attr','')}"
+    if t == "match":
+        return "validate/match"
+    return t
+
+
+def _prose_pattern(p: dict) -> str:
+    name = f"**{p.get('name', '?')}**"
+    if p.get("id"):
+        name += f" (`{p['id']}`)"
+
+    attrs = []
+    if p.get("discoveryType"):
+        attrs.append(p["discoveryType"])
+    if p.get("category"):
+        attrs.append(f"Category: {p['category']}")
+    if p.get("protocol"):
+        proto = p["protocol"]
+        if p.get("port"):
+            proto += f"/{p['port']}"
+        attrs.append(f"Protocol: {proto}")
+    if p.get("credentialType"):
+        attrs.append(f"Credential: {p['credentialType']}")
+    if p.get("mainCi"):
+        attrs.append(f"Main CI: {p['mainCi']}")
+    if p.get("active") is False:
+        attrs.append("INACTIVE")
+
+    lines = [(name + " — " + " | ".join(attrs)) if attrs else name]
+
+    desc = (p.get("description") or "").strip()
+    if desc:
+        if len(desc) > 130:
+            desc = desc[:127] + "…"
+        lines.append(f"  Description: {desc}")
+
+    ndl = p.get("ndl") or {}
+
+    steps = ndl.get("steps", [])
+    if steps:
+        lines.append(f"  Steps ({len(steps)}):")
+        for i, step in enumerate(steps, 1):
+            ops = [_op_summary(op) for op in step.get("operations", [])]
+            op_str = "; ".join(ops)
+            lines.append(f"    {i}. {step.get('name', '')} — {op_str}" if op_str else f"    {i}. {step.get('name', '')}")
+
+    relations = ndl.get("relations", [])
+    if relations:
+        lines.append(f"  Relations ({len(relations)}):")
+        for rel in relations:
+            rt = rel.get("relationshipType") or f"ref field: {rel.get('refField', '?')}"
+            k1 = f"[key:{rel['key1']}]" if rel.get("key1") else ""
+            k2 = f"[key:{rel['key2']}]" if rel.get("key2") else ""
+            lines.append(f"    • {rel.get('table1','?')}{k1} → {rel.get('table2','?')}{k2} [{rt}]")
+
+    cmdb_tables = [t for t in ndl.get("tablesPopulated", []) if t.get("tableType") != "temp"]
+    if cmdb_tables:
+        lines.append("  CMDB tables written:")
+        for t in cmdb_tables:
+            cols = ", ".join(t.get("columns") or [])
+            lines.append(f"    • {t['table']}" + (f" [{cols}]" if cols else ""))
+
+    return "\n".join(lines)
+
+
+def _prose_classifier(c: dict) -> str:
+    name = f"**{c.get('name', '?')}**"
+    cid  = c.get("id", "")
+    if cid:
+        name += f" (`{cid}`)"
+
+    attrs = []
+    if c.get("type"):
+        attrs.append(f"{c['type']} classifier")
+    ci = c.get("ciTableLabel") or c.get("ciTable")
+    if ci:
+        attrs.append(f"CI: {ci}")
+    if c.get("matchCriteria"):
+        attrs.append(f"Match: {c['matchCriteria']} criteria")
+    if c.get("active") is False:
+        attrs.append("INACTIVE")
+
+    line     = (name + " — " + " | ".join(attrs)) if attrs else name
+    criteria = (c.get("criteria") or [])[:4]
     if criteria:
-        result["criteria"] = [
-            {k: cr.get(k, "") for k in ("name", "criterion", "operator", "value")}
+        crits = "; ".join(
+            f"{cr.get('criterion', '')} {cr.get('operator', '')} '{cr.get('value', '')}'"
             for cr in criteria
-        ]
-    return result
+        )
+        line += f"\n  Criteria: {crits}"
+    return line
 
 
 # ── System prompt ─────────────────────────────────────────────────────────────
@@ -191,28 +395,32 @@ the official ServiceNow documentation: https://www.servicenow.com/docs/"
 """
 
 
-def _build_context(query: str) -> str:
-    """Return a context string built from data relevant to the query."""
+def _build_context(messages: list[dict]) -> str:
+    """Retrieve and assemble context from local knowledge base for the conversation."""
+    query = _build_retrieval_query(messages)
+    if not query:
+        return ""
+
     patterns    = _search_patterns(query)
     classifiers = _search_classifiers(query)
+    query_toks  = set(_tokens(query))
 
     parts = []
 
     if patterns:
-        parts.append(
-            f"## Relevant Discovery Patterns ({len(patterns)} matched)\n"
-            + json.dumps([_fmt_pattern(p) for p in patterns], indent=2)
-        )
+        body = "\n".join(_prose_pattern(p) for p in patterns)
+        parts.append(f"## Relevant Discovery Patterns ({len(patterns)} matched)\n{body}")
 
     if classifiers:
-        parts.append(
-            f"## Relevant Classifiers ({len(classifiers)} matched)\n"
-            + json.dumps([_fmt_classifier(c) for c in classifiers], indent=2)
-        )
+        body = "\n".join(_prose_classifier(c) for c in classifiers)
+        parts.append(f"## Relevant Classifiers ({len(classifiers)} matched)\n{body}")
 
-    # Always include the small reference docs
-    parts.append("## Discovery Stages\n" + json.dumps(_stages, indent=2))
-    parts.append("## IRE — Identification & Reconciliation Engine\n" + json.dumps(_ire, indent=2))
+    # Conditionally include static reference sections based on query intent
+    if query_toks & _STAGE_KWORDS:
+        parts.append("## Discovery Stages\n" + json.dumps(_stages, indent=2))
+
+    if query_toks & _IRE_KWORDS:
+        parts.append("## IRE — Identification & Reconciliation Engine\n" + json.dumps(_ire, indent=2))
 
     return "\n\n".join(parts)
 
@@ -224,13 +432,7 @@ def stream_chat(messages: list[dict]):
     _load_data()
     client = _get_client()
 
-    # Use the latest user message as the retrieval query
-    last_query = next(
-        (m["content"] for m in reversed(messages) if m.get("role") == "user"),
-        "",
-    )
-
-    system    = _BASE_SYSTEM + "\n\n" + _build_context(last_query)
+    system    = _BASE_SYSTEM + "\n\n" + _build_context(messages)
     full_msgs = [{"role": "system", "content": system}, *messages]
 
     stream = client.chat.completions.create(

@@ -2,6 +2,10 @@ flask>=3.0.0
 flask-cors>=4.0.0
 openai>=1.30.0
 
+# RAG search
+rank-bm25>=0.2.2
+sentence-transformers>=2.7.0
+
 # Sync tooling (optional — only needed when running sync_from_instance.py)
 pysnow>=0.7.5
 python-dotenv>=1.0.0

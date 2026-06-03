@@ -186,16 +186,22 @@ def chat_context():
 
     The frontend calls OpenAI directly with the user's own API key.
     This endpoint only returns retrieved context — no API key is stored here.
+    Accepts: { query: string, messages?: [{role, content}] }
     """
     from . import chat as ai
 
-    data  = request.get_json(silent=True) or {}
-    query = data.get("query", "")
+    data     = request.get_json(silent=True) or {}
+    query    = data.get("query", "")
+    messages = data.get("messages", [])
 
-    if not query:
-        return jsonify({"error": "query required"}), 400
+    if not query and not messages:
+        return jsonify({"error": "query or messages required"}), 400
+
+    # Build a messages list for the retrieval query builder
+    if not messages and query:
+        messages = [{"role": "user", "content": query}]
 
     ai._load_data()
-    system = ai._BASE_SYSTEM + "\n\n" + ai._build_context(query)
+    system = ai._BASE_SYSTEM + "\n\n" + ai._build_context(messages)
 
     return jsonify({"system": system})
