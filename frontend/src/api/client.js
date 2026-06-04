@@ -23,6 +23,7 @@ export const discoveryApi = {
     return get(`/discovery/classifiers${qs ? `?${qs}` : ''}`)
   },
   getClassifier: (id) => get(`/discovery/classifiers/${id}`),
+  getCredentials: () => get('/discovery/credentials'),
 }
 
 export const modulesApi = {

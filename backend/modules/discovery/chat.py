@@ -13,17 +13,20 @@ _client = None
 # In-memory data store (populated on first request)
 _patterns:    list | None = None
 _classifiers: list | None = None
+_credentials: list | None = None
 _stages:      list | None = None
 _ire:         dict | None = None
 
 # BM25 indices (populated at load time, requires rank-bm25)
-_pat_bm25 = None
-_clf_bm25 = None
+_pat_bm25  = None
+_clf_bm25  = None
+_cred_bm25 = None
 
 # Semantic search (populated at load time, requires sentence-transformers)
-_sem_model      = None
-_pat_embeddings = None   # np.ndarray (N, D)
-_clf_embeddings = None   # np.ndarray (M, D)
+_sem_model       = None
+_pat_embeddings  = None   # np.ndarray (N, D)
+_clf_embeddings  = None   # np.ndarray (M, D)
+_cred_embeddings = None   # np.ndarray (K, D)
 
 # Keywords that trigger inclusion of static reference sections
 _STAGE_KWORDS = frozenset({
@@ -33,6 +36,12 @@ _STAGE_KWORDS = frozenset({
 _IRE_KWORDS = frozenset({
     'ire', 'reconciliation', 'duplicate', 'dedup', 'precedence',
     'serial', 'identification', 'merge', 'conflict',
+})
+_CRED_KWORDS = frozenset({
+    'credential', 'credentials', 'ssh', 'snmp', 'windows', 'wmi', 'winrm',
+    'vmware', 'aws', 'azure', 'gcp', 'jmx', 'jdbc', 'apikey', 'api_key',
+    'vault', 'password', 'private_key', 'authentication', 'auth',
+    'privilege', 'escalation', 'sudo', 'login', 'username',
 })
 
 
@@ -103,6 +112,22 @@ def _clf_doc_text(c: dict) -> str:
     return " ".join(filter(None, parts))
 
 
+def _cred_doc_text(ct: dict) -> str:
+    parts = [
+        ct.get("name", ""),
+        ct.get("shortName", ""),
+        ct.get("description", ""),
+        " ".join(ct.get("protocols", [])),
+        " ".join(ct.get("usedFor", [])),
+        " ".join(ct.get("ciTypes", [])),
+    ]
+    for f in (ct.get("fields") or []):
+        parts.extend([f.get("name", ""), f.get("label", ""), f.get("description", "")])
+    parts.extend(ct.get("requiredPermissions", []))
+    parts.extend(ct.get("notes", []))
+    return " ".join(filter(None, parts))
+
+
 # ── Data loading ──────────────────────────────────────────────────────────────
 
 def _read_json(path: Path):
@@ -111,8 +136,9 @@ def _read_json(path: Path):
 
 def _load_data():
     """Load JSON files and build BM25 + semantic indices (runs once on first request)."""
-    global _patterns, _classifiers, _stages, _ire
-    global _pat_bm25, _clf_bm25, _sem_model, _pat_embeddings, _clf_embeddings
+    global _patterns, _classifiers, _credentials, _stages, _ire
+    global _pat_bm25, _clf_bm25, _cred_bm25
+    global _sem_model, _pat_embeddings, _clf_embeddings, _cred_embeddings
 
     if _patterns is not None:
         return
@@ -140,6 +166,16 @@ def _load_data():
         _classifiers = []
         LOG.warning("No classifiers file found — classifier context will be empty")
 
+    # ── Credentials ──
+    cred_path = _LOCAL_DIR / "credentials.json"
+    if cred_path.exists():
+        raw          = _read_json(cred_path)
+        _credentials = raw.get("credentialTypes", [])
+        LOG.info("Loaded %d credential types", len(_credentials))
+    else:
+        _credentials = []
+        LOG.warning("No credentials.json found — credential context will be empty")
+
     # ── Static reference docs ──
     _stages = _read_json(_LOCAL_DIR / "stages.json")
     _ire    = _read_json(_LOCAL_DIR / "ire.json")
@@ -151,7 +187,12 @@ def _load_data():
             _pat_bm25 = BM25Okapi([_tokens(_pat_doc_text(p)) for p in _patterns])
         if _classifiers:
             _clf_bm25 = BM25Okapi([_tokens(_clf_doc_text(c)) for c in _classifiers])
-        LOG.info("BM25 indices built (%d patterns, %d classifiers)", len(_patterns), len(_classifiers))
+        if _credentials:
+            _cred_bm25 = BM25Okapi([_tokens(_cred_doc_text(ct)) for ct in _credentials])
+        LOG.info(
+            "BM25 indices built (%d patterns, %d classifiers, %d credential types)",
+            len(_patterns), len(_classifiers), len(_credentials),
+        )
     except ImportError:
         LOG.warning("rank-bm25 not installed — falling back to keyword search. Run: pip install rank-bm25")
 
@@ -159,7 +200,10 @@ def _load_data():
     try:
         from sentence_transformers import SentenceTransformer
         _sem_model = SentenceTransformer("all-MiniLM-L6-v2")
-        LOG.info("Encoding %d patterns + %d classifiers for semantic search…", len(_patterns), len(_classifiers))
+        LOG.info(
+            "Encoding %d patterns + %d classifiers + %d credentials for semantic search…",
+            len(_patterns), len(_classifiers), len(_credentials),
+        )
         if _patterns:
             _pat_embeddings = _sem_model.encode(
                 [_pat_doc_text(p) for p in _patterns],
@@ -168,6 +212,11 @@ def _load_data():
         if _classifiers:
             _clf_embeddings = _sem_model.encode(
                 [_clf_doc_text(c) for c in _classifiers],
+                convert_to_numpy=True, show_progress_bar=False,
+            )
+        if _credentials:
+            _cred_embeddings = _sem_model.encode(
+                [_cred_doc_text(ct) for ct in _credentials],
                 convert_to_numpy=True, show_progress_bar=False,
             )
         LOG.info("Semantic index ready")
@@ -250,6 +299,10 @@ def _search_patterns(query: str, limit: int = 10) -> list:
 
 def _search_classifiers(query: str, limit: int = 8) -> list:
     return _hybrid_search(query, _classifiers, _clf_bm25, _clf_embeddings, _clf_doc_text, limit)
+
+
+def _search_credentials(query: str, limit: int = 5) -> list:
+    return _hybrid_search(query, _credentials, _cred_bm25, _cred_embeddings, _cred_doc_text, limit)
 
 
 # ── Retrieval query builder (Tier 1) ─────────────────────────────────────────
@@ -374,6 +427,44 @@ def _prose_classifier(c: dict) -> str:
     return line
 
 
+def _prose_credential(ct: dict) -> str:
+    name = f"**{ct.get('name', '?')}**"
+    cid  = ct.get("id", "")
+    if cid:
+        name += f" (`{cid}`)"
+
+    attrs = []
+    if ct.get("protocols"):
+        attrs.append(f"Protocols: {', '.join(ct['protocols'])}")
+    if ct.get("ports"):
+        attrs.append(f"Ports: {', '.join(ct['ports'])}")
+    if ct.get("usedFor"):
+        attrs.append(f"Used for: {', '.join(ct['usedFor'][:3])}")
+
+    lines = [(name + " — " + " | ".join(attrs)) if attrs else name]
+
+    desc = (ct.get("description") or "").strip()
+    if desc:
+        if len(desc) > 150:
+            desc = desc[:147] + "…"
+        lines.append(f"  Description: {desc}")
+
+    req_fields = [f for f in (ct.get("fields") or []) if f.get("required")]
+    if req_fields:
+        labels = ", ".join(f.get("label", "") for f in req_fields)
+        lines.append(f"  Required fields: {labels}")
+
+    perms = ct.get("requiredPermissions", [])
+    if perms:
+        lines.append(f"  Permissions: {'; '.join(perms[:2])}")
+
+    notes = ct.get("notes", [])
+    if notes:
+        lines.append(f"  Notes: {'; '.join(notes[:2])}")
+
+    return "\n".join(lines)
+
+
 # ── System prompt ─────────────────────────────────────────────────────────────
 
 _BASE_SYSTEM = """\
@@ -421,6 +512,12 @@ def _build_context(messages: list[dict]) -> str:
 
     if query_toks & _IRE_KWORDS:
         parts.append("## IRE — Identification & Reconciliation Engine\n" + json.dumps(_ire, indent=2))
+
+    if query_toks & _CRED_KWORDS:
+        creds = _search_credentials(query)
+        if creds:
+            body = "\n".join(_prose_credential(ct) for ct in creds)
+            parts.append(f"## Relevant Discovery Credentials ({len(creds)} matched)\n{body}")
 
     return "\n\n".join(parts)
 

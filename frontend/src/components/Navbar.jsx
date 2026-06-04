@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { to: '/discovery/classifiers', label: 'Classifiers' },
   { to: '/discovery/stages',      label: 'Discovery Stages' },
   { to: '/discovery/ire',         label: 'IRE & Reconciliation' },
+  { to: '/discovery/credentials', label: 'Credentials' },
 ]
 
 function IconChat() {
@@ -62,13 +63,6 @@ export default function Navbar({ onChatOpen }) {
               {label}
             </NavLink>
           ))}
-
-          <div className="navbar-divider" />
-
-          <div className="navbar-soon-item">
-            Service Mapping
-            <span className="navbar-soon-badge">soon</span>
-          </div>
         </div>
 
         {/* Spacer */}
@@ -117,12 +111,8 @@ export default function Navbar({ onChatOpen }) {
               </NavLink>
             ))}
 
-            {/* Footer row: Service Mapping (disabled) + AI btn */}
+            {/* Footer row: AI btn */}
             <div className="navbar-mobile-footer">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 13, color: '#A8B8B0' }}>Service Mapping</span>
-                <span className="navbar-soon-badge">soon</span>
-              </div>
               <button
                 className="navbar-ai-btn"
                 onClick={() => { closeMobile(); onChatOpen() }}

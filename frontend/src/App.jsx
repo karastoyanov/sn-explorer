@@ -10,6 +10,7 @@ import PatternsList from './modules/discovery/pages/PatternsList'
 import ClassifierDetail from './modules/discovery/pages/ClassifierDetail'
 import ClassifiersList from './modules/discovery/pages/ClassifiersList'
 import IREPage from './modules/discovery/pages/IREPage'
+import DiscoveryCredentials from './modules/discovery/pages/DiscoveryCredentials'
 
 export default function App() {
   const [chatOpen, setChatOpen] = useState(false)
@@ -28,6 +29,7 @@ export default function App() {
               <Route path="/discovery/classifiers/:id" element={<ClassifierDetail />} />
               <Route path="/discovery/stages" element={<DiscoveryStages />} />
               <Route path="/discovery/ire" element={<IREPage />} />
+              <Route path="/discovery/credentials" element={<DiscoveryCredentials />} />
               <Route path="*" element={<Navigate to="/discovery" replace />} />
             </Routes>
           </main>

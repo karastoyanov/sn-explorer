@@ -143,6 +143,11 @@ def get_ire():
     return jsonify(json.loads((LOCAL_DIR / "ire.json").read_text()))
 
 
+@blueprint.route("/credentials")
+def get_credentials():
+    return jsonify(json.loads((LOCAL_DIR / "credentials.json").read_text()))
+
+
 # ── classifiers ────────────────────────────────────────────────────────────────
 
 @blueprint.route("/classifiers")
