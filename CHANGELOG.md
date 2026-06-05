@@ -1,4 +1,29 @@
- ## v1.1.0 — 2026-06-05                                                                                                                            
+## v1.2.0 — 2026-06-05
+
+### Bug Fixes
+
+#### AI Assistant crashed on credential-related questions
+
+The `_prose_credential` function in `chat.py` was missing its `def` declaration — the function body was present but orphaned at module scope, so Python raised `NameError: name '_prose_credential' is not defined` whenever the RAG pipeline retrieved credential context and tried to format it. Any question touching credential types (e.g. *"What permissions does the Windows credential need?"*) caused the assistant to error out entirely. The `def _prose_credential(ct: dict) -> str:` line has been restored.
+
+---
+
+### Documentation
+
+#### README updated
+
+The README now fully covers the Discovery Credentials and MID Server sections that were introduced in v1.1.0:
+
+- Intro sentence updated to mention both sections
+- Table of contents expanded with entries for Discovery Credentials and MID Server
+- Project structure tree updated to show `credentials.json`, `mid_server.json`, and all page components
+- New **Discovery Credentials** section describing the credential type browser, detail panel contents, and AI assistant integration
+- New **MID Server** section describing all 10 reference tabs and AI assistant integration
+- AI Assistant section updated to reflect that the RAG pipeline now covers credentials and MID Server in addition to patterns and classifiers
+
+---
+
+## v1.1.0 — 2026-06-05                                                                                                                            
    
   ### New Sections                                                                                                                                  
                                                                                                                                                   
