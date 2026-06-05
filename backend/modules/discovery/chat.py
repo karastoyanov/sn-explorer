@@ -558,7 +558,7 @@ def _prose_mid_section(s: dict) -> str:
     return f"{title}\n  {body}" if body else title
 
 
-
+def _prose_credential(ct: dict) -> str:
     name = f"**{ct.get('name', '?')}**"
     cid  = ct.get("id", "")
     if cid:
