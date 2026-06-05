@@ -11,6 +11,7 @@ import ClassifierDetail from './modules/discovery/pages/ClassifierDetail'
 import ClassifiersList from './modules/discovery/pages/ClassifiersList'
 import IREPage from './modules/discovery/pages/IREPage'
 import DiscoveryCredentials from './modules/discovery/pages/DiscoveryCredentials'
+import MIDServerPage from './modules/discovery/pages/MIDServerPage'
 
 export default function App() {
   const [chatOpen, setChatOpen] = useState(false)
@@ -30,6 +31,7 @@ export default function App() {
               <Route path="/discovery/stages" element={<DiscoveryStages />} />
               <Route path="/discovery/ire" element={<IREPage />} />
               <Route path="/discovery/credentials" element={<DiscoveryCredentials />} />
+              <Route path="/discovery/mid-server"  element={<MIDServerPage />} />
               <Route path="*" element={<Navigate to="/discovery" replace />} />
             </Routes>
           </main>

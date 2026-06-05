@@ -14,6 +14,8 @@ _client = None
 _patterns:    list | None = None
 _classifiers: list | None = None
 _credentials: list | None = None
+_mid_sections: list | None = None   # flattened MID Server sections for search
+_mid_raw:      dict | None = None   # full mid_server.json for context injection
 _stages:      list | None = None
 _ire:         dict | None = None
 
@@ -21,12 +23,14 @@ _ire:         dict | None = None
 _pat_bm25  = None
 _clf_bm25  = None
 _cred_bm25 = None
+_mid_bm25  = None
 
 # Semantic search (populated at load time, requires sentence-transformers)
 _sem_model       = None
 _pat_embeddings  = None   # np.ndarray (N, D)
 _clf_embeddings  = None   # np.ndarray (M, D)
 _cred_embeddings = None   # np.ndarray (K, D)
+_mid_embeddings  = None   # np.ndarray (S, D)
 
 # Keywords that trigger inclusion of static reference sections
 _STAGE_KWORDS = frozenset({
@@ -42,6 +46,13 @@ _CRED_KWORDS = frozenset({
     'vmware', 'aws', 'azure', 'gcp', 'jmx', 'jdbc', 'apikey', 'api_key',
     'vault', 'password', 'private_key', 'authentication', 'auth',
     'privilege', 'escalation', 'sudo', 'login', 'username',
+})
+_MID_KWORDS = frozenset({
+    'mid', 'mid_server', 'midserver', 'agent', 'ecc', 'ecc_queue', 'proxy',
+    'heartbeat', 'upgrade', 'validate', 'validation', 'thread', 'threads',
+    'config.xml', 'cluster', 'affinity', 'pool', 'orchestration',
+    'mid.max.threads', 'mid.log.level', 'java', 'jre', 'bundled',
+    'down', 'upgrading', 'testing', 'stopped', 'purged',
 })
 
 
@@ -128,6 +139,96 @@ def _cred_doc_text(ct: dict) -> str:
     return " ".join(filter(None, parts))
 
 
+def _mid_section_doc_text(s: dict) -> str:
+    """Flatten a MID Server section dict to a searchable text string."""
+    parts = [s.get("sectionId", ""), s.get("title", ""), s.get("body", "")]
+    return " ".join(filter(None, parts))
+
+
+def _flatten_mid_server(data: dict) -> list[dict]:
+    """Decompose mid_server.json into searchable section documents."""
+    ov = data.get("overview", {})
+    sections = []
+
+    def _sec(sid, title, *text_parts):
+        body = " ".join(str(p) for p in text_parts if p)
+        sections.append({"sectionId": sid, "title": title, "body": body})
+
+    # Overview
+    _sec("overview", "MID Server Overview",
+         ov.get("fullName"), ov.get("summary"), ov.get("eccModel"),
+         " ".join(ov.get("keyFacts", [])))
+
+    # Capabilities
+    for cap in data.get("capabilities", []):
+        _sec(f"cap_{cap['id']}", f"MID Server Capability: {cap['name']}",
+             cap.get("description"), " ".join(cap.get("details", [])))
+
+    # Platforms
+    plat = data.get("platforms", {})
+    hw   = plat.get("hardware", {})
+    os_names = " ".join(
+        f"{o['name']} {' '.join(o.get('versions', []))}"
+        for o in plat.get("operatingSystems", [])
+    )
+    _sec("platforms", "MID Server System Requirements",
+         os_names, hw.get("cpu"), hw.get("memory"), hw.get("disk"), hw.get("notes"),
+         plat.get("java", {}).get("version"), plat.get("java", {}).get("notes"))
+
+    # Network
+    net = data.get("network", {})
+    port_text = " ".join(
+        f"port {p['port']} {p['protocol']} {p['purpose']}"
+        for p in net.get("outboundToTargets", [])
+    )
+    _sec("network", "MID Server Network and Ports",
+         net.get("summary"), port_text, net.get("proxySupport"))
+
+    # Security
+    sec = data.get("security", {})
+    _sec("security", "MID Server Security",
+         sec.get("communication"), sec.get("instanceAccount"),
+         sec.get("credentialStorage"), sec.get("serviceAccount"),
+         " ".join(sec.get("notes", [])))
+
+    # Configuration
+    cfg = data.get("configuration", {})
+    param_text = " ".join(
+        f"{p['name']} {p['description']}" for p in cfg.get("parameters", [])
+    )
+    _sec("configuration", "MID Server Configuration config.xml",
+         cfg.get("description"), param_text)
+
+    # States
+    states_text = " ".join(
+        f"{s['name']} {s['description']}" for s in data.get("states", [])
+    )
+    _sec("states", "MID Server States Up Down Upgrading Testing Stopped Purged", states_text)
+
+    # Clustering
+    cl = data.get("clustering", {})
+    _sec("clustering", "MID Server Clustering Affinity Pool HA",
+         cl.get("summary"), cl.get("affinity", {}).get("description"),
+         cl.get("pool", {}).get("description"), cl.get("ha"),
+         " ".join(cl.get("notes", [])))
+
+    # Lifecycle
+    lc = data.get("lifecycle", {})
+    inst_steps = " ".join(lc.get("installation", {}).get("steps", []))
+    upgr = lc.get("upgrade", {})
+    val  = lc.get("validation", {})
+    _sec("lifecycle", "MID Server Installation Upgrade Validation Lifecycle",
+         inst_steps, upgr.get("description"), " ".join(upgr.get("notes", [])),
+         val.get("description"), " ".join(val.get("steps", [])))
+
+    # Troubleshooting
+    for i, ts in enumerate(data.get("troubleshooting", [])):
+        _sec(f"ts_{i}", f"MID Server Troubleshooting: {ts['symptom']}",
+             ts.get("symptom"), " ".join(ts.get("causes", [])), ts.get("resolution"))
+
+    return sections
+
+
 # ── Data loading ──────────────────────────────────────────────────────────────
 
 def _read_json(path: Path):
@@ -136,9 +237,9 @@ def _read_json(path: Path):
 
 def _load_data():
     """Load JSON files and build BM25 + semantic indices (runs once on first request)."""
-    global _patterns, _classifiers, _credentials, _stages, _ire
-    global _pat_bm25, _clf_bm25, _cred_bm25
-    global _sem_model, _pat_embeddings, _clf_embeddings, _cred_embeddings
+    global _patterns, _classifiers, _credentials, _mid_sections, _mid_raw, _stages, _ire
+    global _pat_bm25, _clf_bm25, _cred_bm25, _mid_bm25
+    global _sem_model, _pat_embeddings, _clf_embeddings, _cred_embeddings, _mid_embeddings
 
     if _patterns is not None:
         return
@@ -176,6 +277,17 @@ def _load_data():
         _credentials = []
         LOG.warning("No credentials.json found — credential context will be empty")
 
+    # ── MID Server ──
+    mid_path = _LOCAL_DIR / "mid_server.json"
+    if mid_path.exists():
+        _mid_raw      = _read_json(mid_path)
+        _mid_sections = _flatten_mid_server(_mid_raw)
+        LOG.info("Loaded %d MID Server sections", len(_mid_sections))
+    else:
+        _mid_raw      = {}
+        _mid_sections = []
+        LOG.warning("No mid_server.json found — MID Server context will be empty")
+
     # ── Static reference docs ──
     _stages = _read_json(_LOCAL_DIR / "stages.json")
     _ire    = _read_json(_LOCAL_DIR / "ire.json")
@@ -189,9 +301,11 @@ def _load_data():
             _clf_bm25 = BM25Okapi([_tokens(_clf_doc_text(c)) for c in _classifiers])
         if _credentials:
             _cred_bm25 = BM25Okapi([_tokens(_cred_doc_text(ct)) for ct in _credentials])
+        if _mid_sections:
+            _mid_bm25 = BM25Okapi([_tokens(_mid_section_doc_text(s)) for s in _mid_sections])
         LOG.info(
-            "BM25 indices built (%d patterns, %d classifiers, %d credential types)",
-            len(_patterns), len(_classifiers), len(_credentials),
+            "BM25 indices built (%d patterns, %d classifiers, %d credentials, %d MID sections)",
+            len(_patterns), len(_classifiers), len(_credentials), len(_mid_sections),
         )
     except ImportError:
         LOG.warning("rank-bm25 not installed — falling back to keyword search. Run: pip install rank-bm25")
@@ -217,6 +331,11 @@ def _load_data():
         if _credentials:
             _cred_embeddings = _sem_model.encode(
                 [_cred_doc_text(ct) for ct in _credentials],
+                convert_to_numpy=True, show_progress_bar=False,
+            )
+        if _mid_sections:
+            _mid_embeddings = _sem_model.encode(
+                [_mid_section_doc_text(s) for s in _mid_sections],
                 convert_to_numpy=True, show_progress_bar=False,
             )
         LOG.info("Semantic index ready")
@@ -303,6 +422,10 @@ def _search_classifiers(query: str, limit: int = 8) -> list:
 
 def _search_credentials(query: str, limit: int = 5) -> list:
     return _hybrid_search(query, _credentials, _cred_bm25, _cred_embeddings, _cred_doc_text, limit)
+
+
+def _search_mid_sections(query: str, limit: int = 6) -> list:
+    return _hybrid_search(query, _mid_sections, _mid_bm25, _mid_embeddings, _mid_section_doc_text, limit)
 
 
 # ── Retrieval query builder (Tier 1) ─────────────────────────────────────────
@@ -427,7 +550,15 @@ def _prose_classifier(c: dict) -> str:
     return line
 
 
-def _prose_credential(ct: dict) -> str:
+def _prose_mid_section(s: dict) -> str:
+    title = f"**{s.get('title', '?')}**"
+    body  = (s.get("body") or "").strip()
+    if len(body) > 400:
+        body = body[:397] + "…"
+    return f"{title}\n  {body}" if body else title
+
+
+
     name = f"**{ct.get('name', '?')}**"
     cid  = ct.get("id", "")
     if cid:
@@ -518,6 +649,12 @@ def _build_context(messages: list[dict]) -> str:
         if creds:
             body = "\n".join(_prose_credential(ct) for ct in creds)
             parts.append(f"## Relevant Discovery Credentials ({len(creds)} matched)\n{body}")
+
+    if query_toks & _MID_KWORDS:
+        mid_hits = _search_mid_sections(query)
+        if mid_hits:
+            body = "\n".join(_prose_mid_section(s) for s in mid_hits)
+            parts.append(f"## MID Server Reference ({len(mid_hits)} sections matched)\n{body}")
 
     return "\n\n".join(parts)
 

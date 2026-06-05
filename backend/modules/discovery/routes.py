@@ -148,6 +148,11 @@ def get_credentials():
     return jsonify(json.loads((LOCAL_DIR / "credentials.json").read_text()))
 
 
+@blueprint.route("/mid-server")
+def get_mid_server():
+    return jsonify(json.loads((LOCAL_DIR / "mid_server.json").read_text()))
+
+
 # ── classifiers ────────────────────────────────────────────────────────────────
 
 @blueprint.route("/classifiers")

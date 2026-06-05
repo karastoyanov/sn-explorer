@@ -9,12 +9,22 @@ const NAV_LINKS = [
   { to: '/discovery/stages',      label: 'Discovery Stages' },
   { to: '/discovery/ire',         label: 'IRE & Reconciliation' },
   { to: '/discovery/credentials', label: 'Credentials' },
+  { to: '/discovery/mid-server',  label: 'MID Server' },
 ]
 
 function IconChat() {
   return (
     <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
       <path d="M6 1C3.24 1 1 3.05 1 5.55c0 1.16.48 2.2 1.27 2.97L1.75 11l2.3-.72C4.57 10.7 5.27 10.9 6 10.9c2.76 0 5-2.05 5-4.55S8.76 1 6 1z" fill="currentColor"/>
+    </svg>
+  )
+}
+
+function IconPulse() {
+  return (
+    <svg width="16" height="9" viewBox="0 0 16 9" fill="none">
+      <path d="M0.5 5H3.5L5 1.5L6.5 7.5L8 0.5L9.5 5H12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12.5 5H15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.45"/>
     </svg>
   )
 }
@@ -67,6 +77,20 @@ export default function Navbar({ onChatOpen }) {
 
         {/* Spacer */}
         <div className="navbar-spacer" />
+
+        {/* Report Issue button */}
+        <a
+          className="navbar-report-btn"
+          href="https://github.com/karastoyanov/sn-explorer/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span className="navbar-report-pulse" />
+          <IconPulse />
+          Report Issue
+        </a>
+
+        <div style={{ width: 8 }} />
 
         {/* AI Assistant button — hidden on mobile via CSS */}
         <button className="navbar-ai-btn" onClick={onChatOpen}>

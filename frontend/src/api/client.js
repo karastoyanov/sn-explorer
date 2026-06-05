@@ -24,6 +24,7 @@ export const discoveryApi = {
   },
   getClassifier: (id) => get(`/discovery/classifiers/${id}`),
   getCredentials: () => get('/discovery/credentials'),
+  getMidServer:   () => get('/discovery/mid-server'),
 }
 
 export const modulesApi = {

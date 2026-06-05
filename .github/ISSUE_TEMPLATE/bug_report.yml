@@ -1,0 +1,63 @@
+name: Bug Report
+description: Something in the app isn't working as expected
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail as you can.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: Describe what went wrong...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Click on ...
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      placeholder: What did you expect to happen?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: section
+    attributes:
+      label: Which section of the app is affected?
+      options:
+        - Overview
+        - Patterns
+        - Classifiers
+        - Discovery Stages
+        - IRE & Reconciliation
+        - Discovery Credentials
+        - MID Server
+        - AI Assistant
+        - Other
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS, or anything else relevant.
+      placeholder: "e.g. Chrome 125 / macOS, Firefox / Windows 11"
+    validations:
+      required: false

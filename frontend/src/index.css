@@ -256,6 +256,49 @@
   .navbar-ai-btn:hover { background: rgba(12, 146, 72, 0.12); }
   .dark .navbar-ai-btn:hover { background: rgba(23, 192, 104, 0.12); }
 
+  .navbar-report-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: rgba(217, 119, 6, 0.07);
+    border: 1px solid rgba(217, 119, 6, 0.22);
+    border-radius: 8px;
+    color: #92400E;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .dark .navbar-report-btn {
+    background: rgba(252, 211, 77, 0.07);
+    border-color: rgba(252, 211, 77, 0.18);
+    color: #FCD34D;
+  }
+  .navbar-report-btn:hover {
+    background: rgba(217, 119, 6, 0.13);
+    transform: translateY(-1px);
+  }
+  .dark .navbar-report-btn:hover {
+    background: rgba(252, 211, 77, 0.12);
+  }
+
+  .navbar-report-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+    animation: report-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes report-pulse {
+    0%, 100% { opacity: 1;    transform: scale(1);   }
+    50%       { opacity: 0.35; transform: scale(0.65); }
+  }
+
   /* ══ CONTENT PAGES ════════════════════════════════════════════════════════ */
 
   .page {
@@ -561,9 +604,10 @@
     .navbar-hamburger { display: flex; }
   }
 
-  /* Mobile only (< 640px): hide AI Assistant button from navbar (it's in mobile menu) */
+  /* Mobile only (< 640px): hide action buttons from navbar (they're in mobile menu) */
   @media (max-width: 639px) {
     .navbar-ai-btn { display: none; }
+    .navbar-report-btn { display: none; }
   }
 
   /* Mobile padding reduction */

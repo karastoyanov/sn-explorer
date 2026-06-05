@@ -1,0 +1,43 @@
+name: Data Issue
+description: Incorrect, outdated, or missing information in the app content
+title: "[Data] "
+labels: ["data"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Found something wrong with the data shown in the app? Let us know — this covers anything in Patterns, Classifiers, Stages, IRE, Credentials, or the MID Server section.
+
+  - type: dropdown
+    id: section
+    attributes:
+      label: Which section contains the incorrect data?
+      options:
+        - Patterns
+        - Classifiers
+        - Discovery Stages
+        - IRE & Reconciliation
+        - Discovery Credentials
+        - MID Server
+        - AI Assistant response
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What is wrong?
+      description: Describe the incorrect or missing data as specifically as possible.
+      placeholder: "e.g. The SSH (Password) credential type is missing the 'sudo_username' field description..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: correct
+    attributes:
+      label: What should it say instead?
+      description: If you know the correct value, paste it here. A reference link is also helpful.
+      placeholder: Correct value or reference URL...
+    validations:
+      required: false
