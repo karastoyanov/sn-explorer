@@ -1,6 +1,6 @@
 # SN Discovery Explorer
 
-A local web application for exploring and querying ServiceNow Discovery configuration — patterns, classifiers, stages, and the IRE (Identification & Reconciliation Engine). Includes an AI assistant that answers questions grounded exclusively in data synced from your own ServiceNow instance.
+A local web application for exploring and querying ServiceNow Discovery configuration — patterns, classifiers, stages, the IRE (Identification & Reconciliation Engine), Discovery Credentials, and the MID Server. Includes an AI assistant that answers questions grounded exclusively in data synced from your own ServiceNow instance.
 
 ---
 
@@ -15,8 +15,10 @@ A local web application for exploring and querying ServiceNow Discovery configur
    - [Extract Classifiers](#extract-classifiers)
    - [Credentials via Environment Variables](#credentials-via-environment-variables)
    - [Sync Options Reference](#sync-options-reference)
-5. [AI Assistant](#ai-assistant)
-6. [Environment Variables](#environment-variables)
+5. [Discovery Credentials](#discovery-credentials)
+6. [MID Server](#mid-server)
+7. [AI Assistant](#ai-assistant)
+8. [Environment Variables](#environment-variables)
 
 ---
 
@@ -43,7 +45,11 @@ SN_Discovery_Explorer/
 │   │   └── discovery/
 │   │       ├── chat.py               # RAG retrieval pipeline
 │   │       ├── routes.py             # REST API endpoints
-│   │       └── data/                 # Bundled reference docs (stages, IRE)
+│   │       └── data/                 # Bundled reference docs
+│   │           ├── stages.json
+│   │           ├── ire.json
+│   │           ├── credentials.json  # Discovery credential types reference
+│   │           └── mid_server.json   # MID Server reference
 │   └── scripts/
 │       ├── extract_patterns.py       # Sync patterns from ServiceNow
 │       ├── extract_classifiers.py    # Sync classifiers from ServiceNow
@@ -53,7 +59,16 @@ SN_Discovery_Explorer/
 ├── frontend/
 │   └── src/
 │       ├── api/client.js
-│       └── components/ChatPanel.jsx
+│       ├── components/ChatPanel.jsx
+│       └── modules/discovery/pages/
+│           ├── PatternsList.jsx
+│           ├── PatternDetail.jsx
+│           ├── ClassifiersList.jsx
+│           ├── ClassifierDetail.jsx
+│           ├── DiscoveryStages.jsx
+│           ├── IREPage.jsx
+│           ├── DiscoveryCredentials.jsx  # Credential types browser
+│           └── MIDServerPage.jsx         # MID Server reference
 ├── docs/
 │   └── rag_implementation.md         # Full RAG pipeline documentation
 ├── .env.example
@@ -251,17 +266,59 @@ The application automatically picks up the new files on startup. The first load 
 
 ---
 
+## Discovery Credentials
+
+The **Discovery Credentials** page is a built-in reference browser for every credential type that ServiceNow Discovery supports. No sync is required — the data is bundled with the application.
+
+The page is organised as a grid of credential type cards. Clicking a card opens a detail panel that shows:
+
+| Section | Content |
+|---|---|
+| Protocols & ports | Which protocols (WMI, SSH, SNMP, etc.) the credential type uses |
+| Configuration fields | Every field the credential record exposes, with required/optional status and a description |
+| Used for | Which Discovery activities rely on this credential type |
+| CI table types | The CMDB tables that CIs discovered with this credential are written to |
+| Required permissions | OS-level or device-level permissions the credential account must hold |
+| Notes | Edge-cases, best practices, and common pitfalls |
+
+The AI assistant also indexes credential data, so you can ask questions like *"What permissions does the Windows credential need?"* or *"Which credential type covers SNMP v3?"* and receive answers grounded in this reference.
+
+---
+
+## MID Server
+
+The **MID Server** page is a tabbed, searchable reference covering everything you need to know about deploying and operating a MID Server. Like the Credentials page, it is bundled with the application and requires no sync.
+
+Tabs available:
+
+| Tab | What it covers |
+|---|---|
+| Overview | What the MID Server is, the ECC queue model, and key facts |
+| Capabilities | Discovery, Orchestration, Service Mapping, Event Management, and other supported workloads |
+| Requirements | Supported operating systems, hardware minimums (CPU, memory, disk), and Java runtime version |
+| Network & Ports | Outbound-only connection model, ports to the ServiceNow instance, ports to discovery targets, and proxy support |
+| Security | TLS communication, instance service account requirements, credential storage, OS service account best practices |
+| Configuration | `config.xml` parameters with required/optional flags and defaults |
+| MID States | All MID Server states (Running, Down, Upgrading, etc.) with colour-coded badges and descriptions |
+| Clustering | MID Server affinity, pools, and high-availability behaviour |
+| Lifecycle | Step-by-step installation, auto-upgrade process, and post-install validation checklist |
+| Troubleshooting | Common symptoms, likely causes, and resolution steps |
+
+The AI assistant also indexes MID Server reference data, so questions like *"How do I configure a MID Server pool?"* or *"What ports does the MID Server need open?"* are answered directly from this content.
+
+---
+
 ## AI Assistant
 
 The chat panel in the top-right corner provides a conversational interface over your synced data. It uses a local RAG (Retrieval-Augmented Generation) pipeline:
 
-1. Your question is sent to the Flask backend, which retrieves the most relevant patterns and classifiers using hybrid BM25 + semantic search.
+1. Your question is sent to the Flask backend, which retrieves the most relevant content using hybrid BM25 + semantic search across patterns, classifiers, credential types, and MID Server reference sections.
 2. The retrieved context is injected into the system prompt.
 3. The enriched prompt is sent to OpenAI directly from your browser using your own API key — the key is stored only in `sessionStorage` and never leaves the browser.
 
-The assistant answers exclusively from your synced data and will tell you explicitly when information is not available rather than guessing. See [`docs/rag_implementation.md`](docs/rag_implementation.md) for full pipeline documentation.
+The assistant answers exclusively from your synced and bundled data and will tell you explicitly when information is not available rather than guessing. See [`docs/rag_implementation.md`](docs/rag_implementation.md) for full pipeline documentation.
 
-**To use the assistant:** open the chat panel, enter your OpenAI API key when prompted, and start asking questions about your patterns, classifiers, stages, or IRE configuration.
+**To use the assistant:** open the chat panel, enter your OpenAI API key when prompted, and start asking questions about your patterns, classifiers, stages, IRE configuration, credential types, or MID Server.
 
 ---
 
