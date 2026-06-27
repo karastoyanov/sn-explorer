@@ -46,7 +46,7 @@ export default function MIDServerPage() {
     <div className="page">
       <div className="page-hdr">
         <h1 className="page-title">MID Server</h1>
-        <p className="page-sub">{data.overview.fullName} — {data.overview.summary.slice(0, 120)}…</p>
+        <p className="page-sub">{data.overview.fullName}</p>
       </div>
 
       <div className="page-body">
