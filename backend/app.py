@@ -14,6 +14,7 @@ from flask_cors import CORS
 from core.module_registry import registry
 from modules.discovery import register as register_discovery
 from modules.service_mapping import register as register_service_mapping
+from modules.cmdb import register as register_cmdb
 
 
 def create_app():
@@ -22,6 +23,7 @@ def create_app():
 
     register_discovery()
     register_service_mapping()
+    register_cmdb()
 
     for bp in registry.get_blueprints():
         app.register_blueprint(bp)

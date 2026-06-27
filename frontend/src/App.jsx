@@ -9,9 +9,10 @@ import PatternDetail from './modules/discovery/pages/PatternDetail'
 import PatternsList from './modules/discovery/pages/PatternsList'
 import ClassifierDetail from './modules/discovery/pages/ClassifierDetail'
 import ClassifiersList from './modules/discovery/pages/ClassifiersList'
-import IREPage from './modules/discovery/pages/IREPage'
 import DiscoveryCredentials from './modules/discovery/pages/DiscoveryCredentials'
 import MIDServerPage from './modules/discovery/pages/MIDServerPage'
+import IREPage from './modules/discovery/pages/IREPage'
+import CMDBClassManager from './modules/cmdb/pages/CMDBClassManager'
 
 export default function App() {
   const [chatOpen, setChatOpen] = useState(false)
@@ -23,15 +24,20 @@ export default function App() {
           <Navbar onChatOpen={() => setChatOpen(true)} />
           <main className="app-main">
             <Routes>
+              {/* Discovery */}
               <Route path="/discovery" element={<Welcome />} />
               <Route path="/discovery/patterns" element={<PatternsList />} />
               <Route path="/discovery/patterns/:id" element={<PatternDetail />} />
               <Route path="/discovery/classifiers" element={<ClassifiersList />} />
               <Route path="/discovery/classifiers/:id" element={<ClassifierDetail />} />
               <Route path="/discovery/stages" element={<DiscoveryStages />} />
-              <Route path="/discovery/ire" element={<IREPage />} />
               <Route path="/discovery/credentials" element={<DiscoveryCredentials />} />
-              <Route path="/discovery/mid-server"  element={<MIDServerPage />} />
+              <Route path="/discovery/mid-server" element={<MIDServerPage />} />
+
+              {/* CMDB Explorer */}
+              <Route path="/cmdb/ire" element={<IREPage />} />
+              <Route path="/cmdb/class-manager" element={<CMDBClassManager />} />
+
               <Route path="*" element={<Navigate to="/discovery" replace />} />
             </Routes>
           </main>

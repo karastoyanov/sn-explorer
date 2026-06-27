@@ -19,18 +19,32 @@ _mid_raw:      dict | None = None   # full mid_server.json for context injection
 _stages:      list | None = None
 _ire:         dict | None = None
 
+# CMDB data (loaded from scripts/data/cmdb_classes.json)
+_cmdb_classes:  list | None = None
+_cmdb_idents:   list | None = None
+_cmdb_rel_types: list | None = None
+_cmdb_recon:    list | None = None
+
 # BM25 indices (populated at load time, requires rank-bm25)
-_pat_bm25  = None
-_clf_bm25  = None
-_cred_bm25 = None
-_mid_bm25  = None
+_pat_bm25   = None
+_clf_bm25   = None
+_cred_bm25  = None
+_mid_bm25   = None
+_cmdb_cls_bm25   = None
+_cmdb_ident_bm25 = None
+_cmdb_rel_bm25   = None
+_cmdb_recon_bm25 = None
 
 # Semantic search (populated at load time, requires sentence-transformers)
-_sem_model       = None
-_pat_embeddings  = None   # np.ndarray (N, D)
-_clf_embeddings  = None   # np.ndarray (M, D)
-_cred_embeddings = None   # np.ndarray (K, D)
-_mid_embeddings  = None   # np.ndarray (S, D)
+_sem_model        = None
+_pat_embeddings   = None   # np.ndarray (N, D)
+_clf_embeddings   = None   # np.ndarray (M, D)
+_cred_embeddings  = None   # np.ndarray (K, D)
+_mid_embeddings   = None   # np.ndarray (S, D)
+_cmdb_cls_embeddings   = None
+_cmdb_ident_embeddings = None
+_cmdb_rel_embeddings   = None
+_cmdb_recon_embeddings = None
 
 # Keywords that trigger inclusion of static reference sections
 _STAGE_KWORDS = frozenset({
@@ -53,6 +67,26 @@ _MID_KWORDS = frozenset({
     'config.xml', 'cluster', 'affinity', 'pool', 'orchestration',
     'mid.max.threads', 'mid.log.level', 'java', 'jre', 'bundled',
     'down', 'upgrading', 'testing', 'stopped', 'purged',
+})
+_CMDB_CLASS_KWORDS = frozenset({
+    'cmdb', 'class', 'classes', 'ci', 'extendable', 'principal',
+    'hierarchy', 'superclass', 'cmdb_ci', 'configuration_item',
+    'ci_type', 'table', 'scope', 'managed',
+})
+_CMDB_IDENT_KWORDS = frozenset({
+    'identifier', 'identifiers', 'identification', 'identify',
+    'attribute', 'attributes', 'main_attribute', 'matching', 'lookup',
+    'hybrid', 'fallback', 'independent', 'ire', 'entry', 'entries',
+})
+_CMDB_REL_KWORDS = frozenset({
+    'relation', 'relations', 'relationship', 'rel_type', 'reltype',
+    'parent', 'child', 'descriptor', 'depends_on', 'runs_on',
+    'hosted_on', 'connected_by', 'contains', 'member_of',
+})
+_CMDB_RECON_KWORDS = frozenset({
+    'reconciliation', 'recon', 'datasource', 'data_source', 'precedence',
+    'null_update', 'priority', 'reconcile', 'override', 'conflict',
+    'source', 'authoritative',
 })
 
 
@@ -142,6 +176,53 @@ def _cred_doc_text(ct: dict) -> str:
 def _mid_section_doc_text(s: dict) -> str:
     """Flatten a MID Server section dict to a searchable text string."""
     parts = [s.get("sectionId", ""), s.get("title", ""), s.get("body", "")]
+    return " ".join(filter(None, parts))
+
+
+def _cmdb_class_doc_text(c: dict) -> str:
+    parts = [
+        c.get("name", ""),
+        c.get("label", ""),
+        c.get("superClass", ""),
+        c.get("description", ""),
+        c.get("scope", ""),
+        c.get("managedByGroup", ""),
+    ]
+    return " ".join(filter(None, parts))
+
+
+def _cmdb_ident_doc_text(ident: dict) -> str:
+    parts = [
+        ident.get("name", ""),
+        ident.get("appliesTo", ""),
+    ]
+    for e in (ident.get("entries") or []):
+        parts.extend([
+            e.get("searchTable", ""),
+            e.get("mainTable", ""),
+            " ".join(e.get("attributes") or []),
+            " ".join(e.get("mainAttributes") or []),
+            " ".join(e.get("hybridAttributes") or []),
+        ])
+    return " ".join(filter(None, parts))
+
+
+def _cmdb_rel_doc_text(r: dict) -> str:
+    parts = [
+        r.get("name", ""),
+        r.get("parentDescriptor", ""),
+        r.get("childDescriptor", ""),
+    ]
+    return " ".join(filter(None, parts))
+
+
+def _cmdb_recon_doc_text(rd: dict) -> str:
+    parts = [
+        rd.get("name", ""),
+        rd.get("appliesTo", ""),
+        rd.get("dataSource", ""),
+        " ".join(rd.get("attributes") or []),
+    ]
     return " ".join(filter(None, parts))
 
 
@@ -238,8 +319,11 @@ def _read_json(path: Path):
 def _load_data():
     """Load JSON files and build BM25 + semantic indices (runs once on first request)."""
     global _patterns, _classifiers, _credentials, _mid_sections, _mid_raw, _stages, _ire
+    global _cmdb_classes, _cmdb_idents, _cmdb_rel_types, _cmdb_recon
     global _pat_bm25, _clf_bm25, _cred_bm25, _mid_bm25
+    global _cmdb_cls_bm25, _cmdb_ident_bm25, _cmdb_rel_bm25, _cmdb_recon_bm25
     global _sem_model, _pat_embeddings, _clf_embeddings, _cred_embeddings, _mid_embeddings
+    global _cmdb_cls_embeddings, _cmdb_ident_embeddings, _cmdb_rel_embeddings, _cmdb_recon_embeddings
 
     if _patterns is not None:
         return
@@ -292,6 +376,22 @@ def _load_data():
     _stages = _read_json(_LOCAL_DIR / "stages.json")
     _ire    = _read_json(_LOCAL_DIR / "ire.json")
 
+    # ── CMDB data ──
+    cmdb_path = _DATA_DIR / "cmdb_classes.json"
+    if cmdb_path.exists():
+        raw             = _read_json(cmdb_path)
+        _cmdb_classes   = raw.get("classes", [])
+        _cmdb_idents    = raw.get("identifiers", [])
+        _cmdb_rel_types = raw.get("relationTypes", [])
+        _cmdb_recon     = raw.get("reconciliationDefinitions", [])
+        LOG.info(
+            "Loaded CMDB data for RAG: %d classes, %d identifiers, %d rel types, %d recon defs",
+            len(_cmdb_classes), len(_cmdb_idents), len(_cmdb_rel_types), len(_cmdb_recon),
+        )
+    else:
+        _cmdb_classes = _cmdb_idents = _cmdb_rel_types = _cmdb_recon = []
+        LOG.warning("cmdb_classes.json not found — CMDB context will be empty")
+
     # ── Tier 1: BM25 indices ──
     try:
         from rank_bm25 import BM25Okapi
@@ -303,9 +403,19 @@ def _load_data():
             _cred_bm25 = BM25Okapi([_tokens(_cred_doc_text(ct)) for ct in _credentials])
         if _mid_sections:
             _mid_bm25 = BM25Okapi([_tokens(_mid_section_doc_text(s)) for s in _mid_sections])
+        if _cmdb_classes:
+            _cmdb_cls_bm25 = BM25Okapi([_tokens(_cmdb_class_doc_text(c)) for c in _cmdb_classes])
+        if _cmdb_idents:
+            _cmdb_ident_bm25 = BM25Okapi([_tokens(_cmdb_ident_doc_text(i)) for i in _cmdb_idents])
+        if _cmdb_rel_types:
+            _cmdb_rel_bm25 = BM25Okapi([_tokens(_cmdb_rel_doc_text(r)) for r in _cmdb_rel_types])
+        if _cmdb_recon:
+            _cmdb_recon_bm25 = BM25Okapi([_tokens(_cmdb_recon_doc_text(rd)) for rd in _cmdb_recon])
         LOG.info(
-            "BM25 indices built (%d patterns, %d classifiers, %d credentials, %d MID sections)",
+            "BM25 indices built (%d patterns, %d classifiers, %d credentials, %d MID sections, "
+            "%d CMDB classes, %d identifiers, %d rel types, %d recon defs)",
             len(_patterns), len(_classifiers), len(_credentials), len(_mid_sections),
+            len(_cmdb_classes), len(_cmdb_idents), len(_cmdb_rel_types), len(_cmdb_recon),
         )
     except ImportError:
         LOG.warning("rank-bm25 not installed — falling back to keyword search. Run: pip install rank-bm25")
@@ -315,7 +425,7 @@ def _load_data():
         from sentence_transformers import SentenceTransformer
         _sem_model = SentenceTransformer("all-MiniLM-L6-v2")
         LOG.info(
-            "Encoding %d patterns + %d classifiers + %d credentials for semantic search…",
+            "Encoding %d patterns + %d classifiers + %d credentials + CMDB data for semantic search…",
             len(_patterns), len(_classifiers), len(_credentials),
         )
         if _patterns:
@@ -336,6 +446,26 @@ def _load_data():
         if _mid_sections:
             _mid_embeddings = _sem_model.encode(
                 [_mid_section_doc_text(s) for s in _mid_sections],
+                convert_to_numpy=True, show_progress_bar=False,
+            )
+        if _cmdb_classes:
+            _cmdb_cls_embeddings = _sem_model.encode(
+                [_cmdb_class_doc_text(c) for c in _cmdb_classes],
+                convert_to_numpy=True, show_progress_bar=False,
+            )
+        if _cmdb_idents:
+            _cmdb_ident_embeddings = _sem_model.encode(
+                [_cmdb_ident_doc_text(i) for i in _cmdb_idents],
+                convert_to_numpy=True, show_progress_bar=False,
+            )
+        if _cmdb_rel_types:
+            _cmdb_rel_embeddings = _sem_model.encode(
+                [_cmdb_rel_doc_text(r) for r in _cmdb_rel_types],
+                convert_to_numpy=True, show_progress_bar=False,
+            )
+        if _cmdb_recon:
+            _cmdb_recon_embeddings = _sem_model.encode(
+                [_cmdb_recon_doc_text(rd) for rd in _cmdb_recon],
                 convert_to_numpy=True, show_progress_bar=False,
             )
         LOG.info("Semantic index ready")
@@ -426,6 +556,22 @@ def _search_credentials(query: str, limit: int = 5) -> list:
 
 def _search_mid_sections(query: str, limit: int = 6) -> list:
     return _hybrid_search(query, _mid_sections, _mid_bm25, _mid_embeddings, _mid_section_doc_text, limit)
+
+
+def _search_cmdb_classes(query: str, limit: int = 8) -> list:
+    return _hybrid_search(query, _cmdb_classes, _cmdb_cls_bm25, _cmdb_cls_embeddings, _cmdb_class_doc_text, limit)
+
+
+def _search_cmdb_idents(query: str, limit: int = 6) -> list:
+    return _hybrid_search(query, _cmdb_idents, _cmdb_ident_bm25, _cmdb_ident_embeddings, _cmdb_ident_doc_text, limit)
+
+
+def _search_cmdb_rel_types(query: str, limit: int = 10) -> list:
+    return _hybrid_search(query, _cmdb_rel_types, _cmdb_rel_bm25, _cmdb_rel_embeddings, _cmdb_rel_doc_text, limit)
+
+
+def _search_cmdb_recon(query: str, limit: int = 6) -> list:
+    return _hybrid_search(query, _cmdb_recon, _cmdb_recon_bm25, _cmdb_recon_embeddings, _cmdb_recon_doc_text, limit)
 
 
 # ── Retrieval query builder (Tier 1) ─────────────────────────────────────────
@@ -596,13 +742,101 @@ def _prose_credential(ct: dict) -> str:
     return "\n".join(lines)
 
 
+def _prose_cmdb_class(c: dict) -> str:
+    name = f"**{c.get('label') or c.get('name', '?')}**"
+    if c.get("name"):
+        name += f" (`{c['name']}`)"
+
+    flags = []
+    if c.get("principalClass"):
+        flags.append("Principal")
+    if c.get("isExtendable"):
+        flags.append("Extendable")
+    if c.get("superClass"):
+        flags.append(f"Extends: {c['superClass']}")
+    if c.get("scope"):
+        flags.append(f"Scope: {c['scope']}")
+    if c.get("fieldCount"):
+        flags.append(f"Fields: {c['fieldCount']}")
+
+    line = name
+    if flags:
+        line += " — " + " | ".join(flags)
+
+    desc = (c.get("description") or "").strip()
+    if desc:
+        if len(desc) > 130:
+            desc = desc[:127] + "…"
+        line += f"\n  {desc}"
+
+    return line
+
+
+def _prose_cmdb_ident(ident: dict) -> str:
+    name = f"**{ident.get('name', '?')}**"
+    attrs = []
+    if ident.get("appliesTo"):
+        attrs.append(f"Class: {ident['appliesTo']}")
+    if ident.get("independent"):
+        attrs.append("Independent")
+    if ident.get("active") is False:
+        attrs.append("INACTIVE")
+
+    lines = [(name + " — " + " | ".join(attrs)) if attrs else name]
+
+    for e in (ident.get("entries") or [])[:3]:
+        entry_parts = []
+        if e.get("searchTable"):
+            entry_parts.append(f"table: {e['searchTable']}")
+        if e.get("mainAttributes"):
+            entry_parts.append(f"main: {', '.join(e['mainAttributes'][:4])}")
+        if e.get("attributes"):
+            entry_parts.append(f"attrs: {', '.join(e['attributes'][:4])}")
+        if entry_parts:
+            lines.append(f"  Entry: " + " | ".join(entry_parts))
+
+    return "\n".join(lines)
+
+
+def _prose_cmdb_rel_type(r: dict) -> str:
+    name = f"**{r.get('name', '?')}**"
+    parts = []
+    if r.get("parentDescriptor"):
+        parts.append(f"Parent: \"{r['parentDescriptor']}\"")
+    if r.get("childDescriptor"):
+        parts.append(f"Child: \"{r['childDescriptor']}\"")
+    return name + (" — " + " | ".join(parts) if parts else "")
+
+
+def _prose_cmdb_recon(rd: dict) -> str:
+    name = f"**{rd.get('name', '?')}**"
+    attrs = []
+    if rd.get("appliesTo"):
+        attrs.append(f"Class: {rd['appliesTo']}")
+    if rd.get("dataSource"):
+        attrs.append(f"Source: {rd['dataSource']}")
+    if rd.get("priority") is not None:
+        attrs.append(f"Priority: {rd['priority']}")
+    if rd.get("active") is False:
+        attrs.append("INACTIVE")
+
+    lines = [(name + " — " + " | ".join(attrs)) if attrs else name]
+
+    fields = (rd.get("attributes") or [])[:5]
+    if fields:
+        lines.append(f"  Attributes: {', '.join(fields)}")
+
+    return "\n".join(lines)
+
+
 # ── System prompt ─────────────────────────────────────────────────────────────
 
 _BASE_SYSTEM = """\
-You are an expert assistant for ServiceNow Discovery — the ITOM module that automatically \
-discovers and populates the CMDB. You help developers, consultants, and administrators \
-understand Discovery patterns, stages, classifiers, probes, sensors, and the IRE \
-(Identification and Reconciliation Engine).
+You are an expert assistant for ServiceNow Discovery and CMDB — the ITOM modules that \
+automatically discover infrastructure and populate the Configuration Management Database. \
+You help developers, consultants, and administrators understand Discovery patterns, stages, \
+classifiers, probes, sensors, the IRE (Identification and Reconciliation Engine), CMDB CI \
+classes, identification rules, relation types, and reconciliation definitions.
 
 STRICT RULES — follow these exactly:
 1. Answer questions ONLY using the data provided in the sections below.
@@ -611,7 +845,7 @@ STRICT RULES — follow these exactly:
    "I don't have that information in the loaded data. For this topic, please refer to \
 the official ServiceNow documentation: https://www.servicenow.com/docs/"
 4. Never guess, infer, or fabricate details not present in the data.
-5. Cite pattern names and IDs when relevant.
+5. Cite pattern names, CI class names, and IDs when relevant.
 6. Be concise unless the user asks for more detail.
 7. Use markdown for lists and comparisons.\
 """
@@ -655,6 +889,31 @@ def _build_context(messages: list[dict]) -> str:
         if mid_hits:
             body = "\n".join(_prose_mid_section(s) for s in mid_hits)
             parts.append(f"## MID Server Reference ({len(mid_hits)} sections matched)\n{body}")
+
+    # CMDB context — injected when query relates to CI classes, identifiers, relations, or recon
+    if query_toks & _CMDB_CLASS_KWORDS:
+        hits = _search_cmdb_classes(query)
+        if hits:
+            body = "\n".join(_prose_cmdb_class(c) for c in hits)
+            parts.append(f"## CMDB CI Classes ({len(hits)} matched)\n{body}")
+
+    if query_toks & _CMDB_IDENT_KWORDS:
+        hits = _search_cmdb_idents(query)
+        if hits:
+            body = "\n".join(_prose_cmdb_ident(i) for i in hits)
+            parts.append(f"## CMDB Identification Rules ({len(hits)} matched)\n{body}")
+
+    if query_toks & _CMDB_REL_KWORDS and _cmdb_rel_types:
+        # Only 52 relation types total — include all of them when the topic is relevant
+        hits = _cmdb_rel_types
+        body = "\n".join(_prose_cmdb_rel_type(r) for r in hits)
+        parts.append(f"## CMDB Relation Types (all {len(hits)})\n{body}")
+
+    if query_toks & _CMDB_RECON_KWORDS:
+        hits = _search_cmdb_recon(query)
+        if hits:
+            body = "\n".join(_prose_cmdb_recon(rd) for rd in hits)
+            parts.append(f"## CMDB Reconciliation Definitions ({len(hits)} matched)\n{body}")
 
     return "\n\n".join(parts)
 
