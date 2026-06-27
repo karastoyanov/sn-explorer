@@ -20,7 +20,7 @@ export default function DiscoveryStages() {
         </div>
         <div className="page-body">
           <div className="page-inner">
-            <div className="text-[13px] text-[#8EA898] dark:text-[#6A9880]">Loading…</div>
+            <div className="text-[13px] text-[#506458] dark:text-[#4A6858]">Loading…</div>
           </div>
         </div>
       </div>
@@ -66,7 +66,7 @@ export default function DiscoveryStages() {
                   className={`flex-1 min-w-0 rounded-xl overflow-hidden cursor-pointer select-none transition-all duration-150
                     ${active?.id === stage.id
                       ? ''
-                      : 'border border-[#E0E6E2] dark:border-[#1E3028] hover:border-[#9DDCBA] dark:hover:border-[rgba(23,192,104,0.3)] hover:shadow-sm'
+                      : 'border border-[#D8E2DC] dark:border-[#1A2C22] hover:border-[#9DDCBA] dark:hover:border-[rgba(23,192,104,0.3)] hover:shadow-sm'
                     }`}
                   style={active?.id === stage.id ? { boxShadow: `0 0 0 2px ${stage.color}` } : {}}
                   onClick={() => setActive(stage)}
@@ -88,8 +88,8 @@ export default function DiscoveryStages() {
                   </div>
 
                   {/* Description */}
-                  <div className="bg-white dark:bg-[#141E18] px-3 py-2.5 border-t border-[#E0E6E2] dark:border-[#1E3028]">
-                    <p className="text-[11px] text-[#8EA898] dark:text-[#6A9880] leading-relaxed">
+                  <div className="bg-white dark:bg-[#141E18] px-3 py-2.5 border-t border-[#D8E2DC] dark:border-[#1A2C22]">
+                    <p className="text-[11px] text-[#506458] dark:text-[#4A6858] leading-relaxed">
                       {stage.description.split('.')[0]}.
                     </p>
                   </div>
@@ -112,7 +112,7 @@ function StageDetail({ stage }) {
   return (
     <div className="card">
       {/* Detail header */}
-      <div className="flex items-start gap-4 px-5 py-4 border-b border-[#E0E6E2] dark:border-[#1E3028] bg-[#F9FAF9] dark:bg-[#182419]">
+      <div className="flex items-start gap-4 px-5 py-4 border-b border-[#D8E2DC] dark:border-[#1A2C22] bg-[#F5F8F6] dark:bg-[#172018]">
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[15px] font-bold shrink-0 mt-0.5"
           style={{ background: stage.color }}
@@ -121,22 +121,22 @@ function StageDetail({ stage }) {
         </div>
         <div>
           <h2 className="text-[15px] font-semibold text-[#131A15] dark:text-[#E0EAE4]">{stage.name}</h2>
-          <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] mt-0.5 leading-relaxed">
+          <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] mt-0.5 leading-relaxed">
             {stage.description}
           </p>
         </div>
       </div>
 
       {/* Two-column body */}
-      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#EBF0EC] dark:divide-[#1E3028]">
+      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#E6EDEA] dark:divide-[#1A2C22]">
 
         {/* Steps */}
         <div className="p-5">
           <div className="label-xs mb-3">Steps in this phase</div>
           <div className="flex flex-col gap-2.5">
             {stage.steps.map((step, i) => (
-              <div key={i} className="flex items-start gap-2.5 text-[13px] text-[#2A3A30] dark:text-[#93B5A5]">
-                <div className="w-5 h-5 rounded-full bg-[#EBF0EC] dark:bg-[#1E3028] text-[#8EA898] dark:text-[#6A9880] flex items-center justify-center text-[10px] font-semibold shrink-0 mt-0.5">
+              <div key={i} className="flex items-start gap-2.5 text-[13px] text-[#1E3028] dark:text-[#A8C4B8]">
+                <div className="w-5 h-5 rounded-full bg-[#E4EDEA] dark:bg-[#1A2C22] text-[#506458] dark:text-[#4A6858] flex items-center justify-center text-[10px] font-semibold shrink-0 mt-0.5">
                   {i + 1}
                 </div>
                 <span className="leading-relaxed">{step}</span>
@@ -150,9 +150,9 @@ function StageDetail({ stage }) {
           <div className="label-xs mb-3">Tables involved</div>
           <div className="space-y-0">
             {stage.tables.map((t) => (
-              <div key={t.name} className="flex items-baseline gap-2 py-1.5 border-b border-[#EBF0EC] dark:border-[#1E3028] last:border-0">
+              <div key={t.name} className="flex items-baseline gap-2 py-1.5 border-b border-[#EBF0EC] dark:border-[#1A2C22] last:border-0">
                 <span className="mono min-w-[170px] shrink-0">{t.name}</span>
-                <span className="text-[11.5px] text-[#8EA898] dark:text-[#6A9880] leading-snug">{t.note}</span>
+                <span className="text-[11.5px] text-[#506458] dark:text-[#4A6858] leading-snug">{t.note}</span>
               </div>
             ))}
           </div>
@@ -160,7 +160,7 @@ function StageDetail({ stage }) {
           {stage.midServerRole && (
             <div className="mt-4">
               <div className="label-xs mb-2">MID Server role</div>
-              <div className="bg-[#F4F5F4] dark:bg-[#0D1410] rounded-lg p-3 text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">
+              <div className="bg-[#F4F5F4] dark:bg-[#0D1410] rounded-lg p-3 text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">
                 {stage.midServerRole}
               </div>
             </div>

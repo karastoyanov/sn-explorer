@@ -23,8 +23,8 @@ function EmptyState({ tab }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 gap-3">
       <div className="text-[#C8D4CE] dark:text-[#253428]"><IconDatabase /></div>
-      <div className="text-[13px] font-semibold text-[#495C52] dark:text-[#607870]">No data loaded</div>
-      <div className="text-[12px] text-center max-w-[360px] leading-relaxed text-[#8EA898] dark:text-[#6A9880]">
+      <div className="text-[13px] font-semibold text-[#3E5448] dark:text-[#5A7870]">No data loaded</div>
+      <div className="text-[12px] text-center max-w-[360px] leading-relaxed text-[#506458] dark:text-[#4A6858]">
         {descriptions[tab]}
         <br />
         Run <span className="font-mono text-[11px] text-[#0C9248] dark:text-[#17C068]">extract_cmdb_classes.py</span> against your instance to populate this section.
@@ -56,7 +56,7 @@ export default function CMDBClassManager() {
     return (
       <div className="page">
         <div className="page-hdr">
-          <div className="page-title text-[#8EA898] dark:text-[#6A9880]">Loading…</div>
+          <div className="page-title text-[#506458] dark:text-[#4A6858]">Loading…</div>
         </div>
       </div>
     )
@@ -231,7 +231,7 @@ function IdentifiersTab({ identifiers }) {
                   <span className="font-semibold text-[13px] text-[#131A15] dark:text-[#E0EAE4]">
                     {ident.name || ident.appliesTo}
                   </span>
-                  <span className="mono text-[11px] text-[#8EA898] dark:text-[#6A9880]">
+                  <span className="mono text-[11px]">
                     {ident.appliesTo}
                   </span>
                 </div>
@@ -242,14 +242,14 @@ function IdentifiersTab({ identifiers }) {
                   <span className={`badge ${ident.active ? 'badge-green' : 'badge-gray'}`}>
                     {ident.active ? 'Active' : 'Inactive'}
                   </span>
-                  <span className="text-[11px] text-[#8EA898] dark:text-[#6A9880]">
+                  <span className="text-[11px] text-[#506458] dark:text-[#4A6858]">
                     {ident.entries?.length ?? 0} {ident.entries?.length === 1 ? 'entry' : 'entries'}
                   </span>
                 </div>
               </div>
               <svg
                 width="14" height="14" viewBox="0 0 14 14" fill="none"
-                className={`shrink-0 text-[#8EA898] transition-transform ${expanded[ident.id] ? 'rotate-180' : ''}`}
+                className={`shrink-0 text-[#506458] transition-transform ${expanded[ident.id] ? 'rotate-180' : ''}`}
               >
                 <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
@@ -257,14 +257,14 @@ function IdentifiersTab({ identifiers }) {
 
             {/* Expanded entries */}
             {expanded[ident.id] && ident.entries?.length > 0 && (
-              <div className="border-t border-[#EBF0EC] dark:border-[#1E3028]">
+              <div className="border-t border-[#EBF0EC] dark:border-[#1A2C22]">
                 {ident.entries.map((entry, i) => (
                   <div key={entry.id}
                     className="px-6 py-3 border-b border-[#F0F4F2] dark:border-[#182419] last:border-b-0 bg-[#FAFBFA] dark:bg-[#10180E]"
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <span className="label-xs">Entry {i + 1}</span>
-                      <span className="text-[11px] text-[#8EA898] dark:text-[#6A9880]">
+                      <span className="text-[11px] text-[#506458] dark:text-[#4A6858]">
                         priority {entry.order ?? '—'}
                       </span>
                       {entry.searchTable && (
@@ -304,7 +304,7 @@ function IdentifiersTab({ identifiers }) {
             )}
 
             {expanded[ident.id] && (!ident.entries || ident.entries.length === 0) && (
-              <div className="px-6 py-3 text-[12px] text-[#8EA898] dark:text-[#6A9880] bg-[#FAFBFA] dark:bg-[#10180E] border-t border-[#EBF0EC] dark:border-[#1E3028]">
+              <div className="px-6 py-3 text-[12px] text-[#506458] dark:text-[#4A6858] bg-[#FAFBFA] dark:bg-[#10180E] border-t border-[#EBF0EC] dark:border-[#1A2C22]">
                 No entries configured
               </div>
             )}

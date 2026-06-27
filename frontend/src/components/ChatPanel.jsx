@@ -17,14 +17,14 @@ const MD_COMPONENTS = {
   h3:         ({ children }) => <h3 className="text-[13px] font-semibold mb-1 mt-2 first:mt-0 text-[#131A15] dark:text-[#E0EAE4]">{children}</h3>,
   a:          ({ href, children }) => <a href={href} target="_blank" rel="noreferrer" className="text-[#0C9248] dark:text-[#17C068] underline underline-offset-2 hover:opacity-80">{children}</a>,
   code:       ({ inline, children }) => inline
-                ? <code className="font-mono text-[11.5px] px-1 py-0.5 rounded bg-[#EBF0EC] dark:bg-[#0D1410] text-[#0C9248] dark:text-[#17C068]">{children}</code>
+                ? <code className="font-['IBM_Plex_Mono'] text-[11.5px] px-1 py-0.5 rounded bg-[#EBF0EC] dark:bg-[#0D1410] text-[#0C9248] dark:text-[#17C068]">{children}</code>
                 : <code>{children}</code>,
-  pre:        ({ children }) => <pre className="font-mono text-[11.5px] leading-relaxed text-[#6EE7B7] bg-[#080E0A] border border-[#142018] rounded-lg px-3 py-2.5 overflow-x-auto mb-2 whitespace-pre-wrap break-words">{children}</pre>,
-  blockquote: ({ children }) => <blockquote className="border-l-2 border-[#9DDCBA] dark:border-[#1E5035] pl-3 text-[#8EA898] dark:text-[#6A9880] italic mb-2">{children}</blockquote>,
-  hr:         () => <hr className="border-[#E0E6E2] dark:border-[#1E3028] my-2" />,
+  pre:        ({ children }) => <pre className="font-['IBM_Plex_Mono'] text-[11.5px] leading-relaxed text-[#6EE7B7] bg-[#080E0A] border border-[#142018] rounded-lg px-3 py-2.5 overflow-x-auto mb-2 whitespace-pre-wrap break-words">{children}</pre>,
+  blockquote: ({ children }) => <blockquote className="border-l-2 border-[#9DDCBA] dark:border-[#1E5035] pl-3 text-[#506458] dark:text-[#4A6858] italic mb-2">{children}</blockquote>,
+  hr:         () => <hr className="border-[#D8E2DC] dark:border-[#1A2C22] my-2" />,
   table:      ({ children }) => <div className="overflow-x-auto mb-2"><table className="w-full text-[12px] border-collapse">{children}</table></div>,
-  th:         ({ children }) => <th className="text-left px-2 py-1.5 font-semibold text-[#8EA898] dark:text-[#6A9880] border-b border-[#E0E6E2] dark:border-[#1E3028] bg-[#F9FAF9] dark:bg-[#182419]">{children}</th>,
-  td:         ({ children }) => <td className="px-2 py-1.5 border-b border-[#EBF0EC] dark:border-[#1E3028] text-[#2A3A30] dark:text-[#93B5A5]">{children}</td>,
+  th:         ({ children }) => <th className="text-left px-2 py-1.5 font-semibold text-[#506458] dark:text-[#4A6858] border-b border-[#D8E2DC] dark:border-[#1A2C22] bg-[#F9FAF9] dark:bg-[#172018]">{children}</th>,
+  td:         ({ children }) => <td className="px-2 py-1.5 border-b border-[#EBF0EC] dark:border-[#1A2C22] text-[#1E3028] dark:text-[#A8C4B8]">{children}</td>,
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -108,8 +108,8 @@ function KeySetupScreen({ onSave }) {
         <div className="text-[14px] font-semibold text-[#131A15] dark:text-[#E0EAE4] mb-1.5">
           Enter your OpenAI API key
         </div>
-        <p className="text-[12px] text-[#8EA898] dark:text-[#6A9880] leading-relaxed">
-          Your key is stored only in <strong className="text-[#495C52] dark:text-[#93B5A5]">this browser</strong> and is never sent to our servers or shared with anyone else.
+        <p className="text-[12px] text-[#506458] dark:text-[#4A6858] leading-relaxed">
+          Your key is stored only in <strong className="text-[#3E5448] dark:text-[#A8C4B8]">this browser</strong> and is never sent to our servers or shared with anyone else.
         </p>
       </div>
 
@@ -123,11 +123,11 @@ function KeySetupScreen({ onSave }) {
             onChange={e => { setValue(e.target.value); setError('') }}
             onKeyDown={e => e.key === 'Enter' && handleSave()}
             placeholder="sk-..."
-            className="flex-1 px-3 py-2 text-[13px] bg-white dark:bg-[#141E18] border border-[#E0E6E2] dark:border-[#1E3028] rounded-xl text-[#131A15] dark:text-[#E0EAE4] placeholder:text-[#C4D9CC] dark:placeholder:text-[#2E4238] outline-none focus:border-[#0C9248] dark:focus:border-[#17C068] transition-colors font-mono"
+            className="flex-1 px-3 py-2 text-[13px] bg-white dark:bg-[#141E18] border border-[#D8E2DC] dark:border-[#1A2C22] rounded-xl text-[#131A15] dark:text-[#E0EAE4] placeholder:text-[#C4D9CC] dark:placeholder:text-[#2E4238] outline-none focus:border-[#0C9248] dark:focus:border-[#17C068] transition-colors"
           />
           <button
             onClick={() => setShow(v => !v)}
-            className="px-2.5 py-2 rounded-xl border border-[#E0E6E2] dark:border-[#1E3028] text-[11px] text-[#8EA898] dark:text-[#6A9880] bg-white dark:bg-[#141E18] hover:border-[#9DDCBA] dark:hover:border-[rgba(23,192,104,0.3)] transition-colors cursor-pointer"
+            className="px-2.5 py-2 rounded-xl border border-[#D8E2DC] dark:border-[#1A2C22] text-[11px] text-[#506458] dark:text-[#4A6858] bg-white dark:bg-[#141E18] hover:border-[#9DDCBA] dark:hover:border-[rgba(23,192,104,0.3)] transition-colors cursor-pointer"
           >
             {show ? 'Hide' : 'Show'}
           </button>
@@ -173,8 +173,8 @@ function KeyChangeBar({ onUpdate, onRemove, onCancel }) {
   }
 
   return (
-    <div className="shrink-0 px-4 py-3 border-b border-[#E0E6E2] dark:border-[#1E3028] bg-[#F9FAF9] dark:bg-[#182419]">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-[#8EA898] dark:text-[#6A9880] mb-2">
+    <div className="shrink-0 px-4 py-3 border-b border-[#D8E2DC] dark:border-[#1A2C22] bg-[#F9FAF9] dark:bg-[#172018]">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-[#506458] dark:text-[#4A6858] mb-2">
         Change API key
       </div>
       <div className="flex gap-2 mb-2">
@@ -185,11 +185,11 @@ function KeyChangeBar({ onUpdate, onRemove, onCancel }) {
           onChange={e => { setValue(e.target.value); setError('') }}
           onKeyDown={e => e.key === 'Enter' && handleUpdate()}
           placeholder="sk-..."
-          className="flex-1 px-2.5 py-1.5 text-[12px] bg-white dark:bg-[#141E18] border border-[#E0E6E2] dark:border-[#1E3028] rounded-lg text-[#131A15] dark:text-[#E0EAE4] placeholder:text-[#C4D9CC] dark:placeholder:text-[#2E4238] outline-none focus:border-[#0C9248] dark:focus:border-[#17C068] transition-colors font-mono"
+          className="flex-1 px-2.5 py-1.5 text-[12px] bg-white dark:bg-[#141E18] border border-[#D8E2DC] dark:border-[#1A2C22] rounded-lg text-[#131A15] dark:text-[#E0EAE4] placeholder:text-[#C4D9CC] dark:placeholder:text-[#2E4238] outline-none focus:border-[#0C9248] dark:focus:border-[#17C068] transition-colors"
         />
         <button
           onClick={() => setShow(v => !v)}
-          className="px-2 py-1.5 rounded-lg border border-[#E0E6E2] dark:border-[#1E3028] text-[11px] text-[#8EA898] dark:text-[#6A9880] bg-white dark:bg-[#141E18] hover:border-[#9DDCBA] transition-colors cursor-pointer"
+          className="px-2 py-1.5 rounded-lg border border-[#D8E2DC] dark:border-[#1A2C22] text-[11px] text-[#506458] dark:text-[#4A6858] bg-white dark:bg-[#141E18] hover:border-[#9DDCBA] transition-colors cursor-pointer"
         >
           {show ? 'Hide' : 'Show'}
         </button>
@@ -204,13 +204,13 @@ function KeyChangeBar({ onUpdate, onRemove, onCancel }) {
         </button>
         <button
           onClick={onRemove}
-          className="px-3 py-1.5 rounded-lg border border-[#E0E6E2] dark:border-[#1E3028] text-[12px] text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
+          className="px-3 py-1.5 rounded-lg border border-[#D8E2DC] dark:border-[#1A2C22] text-[12px] text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
         >
           Remove key
         </button>
         <button
           onClick={onCancel}
-          className="ml-auto px-3 py-1.5 rounded-lg text-[12px] text-[#8EA898] dark:text-[#6A9880] hover:text-[#495C52] dark:hover:text-[#93B5A5] transition-colors cursor-pointer"
+          className="ml-auto px-3 py-1.5 rounded-lg text-[12px] text-[#506458] dark:text-[#4A6858] hover:text-[#3E5448] dark:hover:text-[#A8C4B8] transition-colors cursor-pointer"
         >
           Cancel
         </button>
@@ -295,10 +295,10 @@ export default function ChatPanel({ open, onClose }) {
       <div className="fixed inset-0 bg-black/25 dark:bg-black/50 z-40" onClick={onClose} />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[420px] z-50 flex flex-col bg-white dark:bg-[#141E18] border-l border-[#E0E6E2] dark:border-[#1E3028] shadow-2xl">
+      <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[420px] z-50 flex flex-col bg-white dark:bg-[#141E18] border-l border-[#D8E2DC] dark:border-[#1A2C22] shadow-2xl">
 
         {/* Header */}
-        <div className="flex items-center gap-2.5 px-4 py-3 border-b border-[#E0E6E2] dark:border-[#1E3028] shrink-0">
+        <div className="flex items-center gap-2.5 px-4 py-3 border-b border-[#D8E2DC] dark:border-[#1A2C22] shrink-0">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#0C9248] to-[#17C068] flex items-center justify-center shrink-0">
             <IconChat />
           </div>
@@ -306,7 +306,7 @@ export default function ChatPanel({ open, onClose }) {
             <div className="text-[13px] font-semibold text-[#131A15] dark:text-[#E0EAE4] leading-none">
               Discovery Assistant
             </div>
-            <div className="text-[10.5px] text-[#8EA898] dark:text-[#6A9880] mt-0.5">
+            <div className="text-[10.5px] text-[#506458] dark:text-[#4A6858] mt-0.5">
               Patterns · Stages · IRE
             </div>
           </div>
@@ -319,7 +319,7 @@ export default function ChatPanel({ open, onClose }) {
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                 showKeyBar
                   ? 'bg-[#E6F6ED] dark:bg-[rgba(23,192,104,0.1)] text-[#0C9248] dark:text-[#17C068]'
-                  : 'text-[#8EA898] dark:text-[#6A9880] hover:bg-[#EBF0EC] dark:hover:bg-white/[0.05]'
+                  : 'text-[#506458] dark:text-[#4A6858] hover:bg-[#EBF0EC] dark:hover:bg-white/[0.05]'
               }`}
             >
               <IconKey />
@@ -329,7 +329,7 @@ export default function ChatPanel({ open, onClose }) {
           {messages.length > 0 && (
             <button
               onClick={() => setMessages([])}
-              className="text-[11px] px-2 py-1 rounded text-[#8EA898] dark:text-[#6A9880] hover:bg-[#E6F6ED] dark:hover:bg-[rgba(23,192,104,0.06)] cursor-pointer transition-colors"
+              className="text-[11px] px-2 py-1 rounded text-[#506458] dark:text-[#4A6858] hover:bg-[#E6F6ED] dark:hover:bg-[rgba(23,192,104,0.06)] cursor-pointer transition-colors"
             >
               Clear
             </button>
@@ -337,7 +337,7 @@ export default function ChatPanel({ open, onClose }) {
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#8EA898] dark:text-[#6A9880] hover:bg-[#E6F6ED] dark:hover:bg-[rgba(23,192,104,0.06)] cursor-pointer transition-colors"
+            className="p-1.5 rounded-lg text-[#506458] dark:text-[#4A6858] hover:bg-[#E6F6ED] dark:hover:bg-[rgba(23,192,104,0.06)] cursor-pointer transition-colors"
             aria-label="Close"
           >
             <IconClose />
@@ -362,7 +362,7 @@ export default function ChatPanel({ open, onClose }) {
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-[#F4F5F4] dark:bg-[#0D1410]">
               {messages.length === 0 && (
                 <div className="space-y-3">
-                  <p className="text-[12px] text-[#8EA898] dark:text-[#6A9880] leading-relaxed">
+                  <p className="text-[12px] text-[#506458] dark:text-[#4A6858] leading-relaxed">
                     Ask anything about ServiceNow Discovery — patterns, stages, IRE rules, probes, classifiers, credentials.
                   </p>
                   <div className="space-y-1.5">
@@ -370,7 +370,7 @@ export default function ChatPanel({ open, onClose }) {
                       <button
                         key={s}
                         onClick={() => send(s)}
-                        className="w-full text-left text-[12px] px-3 py-2 rounded-lg bg-white dark:bg-[#182419] border border-[#E0E6E2] dark:border-[#1E3028] text-[#2A3A30] dark:text-[#93B5A5] hover:border-[#0C9248] dark:hover:border-[#17C068] hover:bg-[#E6F6ED] dark:hover:bg-[rgba(23,192,104,0.08)] cursor-pointer transition-colors"
+                        className="w-full text-left text-[12px] px-3 py-2 rounded-lg bg-white dark:bg-[#172018] border border-[#D8E2DC] dark:border-[#1A2C22] text-[#1E3028] dark:text-[#A8C4B8] hover:border-[#0C9248] dark:hover:border-[#17C068] hover:bg-[#E6F6ED] dark:hover:bg-[rgba(23,192,104,0.08)] cursor-pointer transition-colors"
                       >
                         {s}
                       </button>
@@ -389,7 +389,7 @@ export default function ChatPanel({ open, onClose }) {
                       {msg.content}
                     </div>
                   ) : (
-                    <div className="max-w-[88%] rounded-2xl rounded-bl-sm px-3.5 py-2.5 bg-white dark:bg-[#182419] text-[#131A15] dark:text-[#E0EAE4]">
+                    <div className="max-w-[88%] rounded-2xl rounded-bl-sm px-3.5 py-2.5 bg-white dark:bg-[#172018] text-[#131A15] dark:text-[#E0EAE4]">
                       {msg.content ? (
                         <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
                           {msg.content}
@@ -407,7 +407,7 @@ export default function ChatPanel({ open, onClose }) {
             </div>
 
             {/* Input */}
-            <div className="border-t border-[#E0E6E2] dark:border-[#1E3028] p-3 shrink-0 bg-white dark:bg-[#141E18]">
+            <div className="border-t border-[#D8E2DC] dark:border-[#1A2C22] p-3 shrink-0 bg-white dark:bg-[#141E18]">
               <div className="flex gap-2 items-end">
                 <textarea
                   ref={inputRef}
@@ -419,7 +419,7 @@ export default function ChatPanel({ open, onClose }) {
                   placeholder="Ask about patterns, stages, IRE…"
                   rows={1}
                   disabled={loading}
-                  className="flex-1 px-3 py-2 text-[13px] bg-[#F4F5F4] dark:bg-[#0D1410] border border-[#E0E6E2] dark:border-[#1E3028] rounded-xl text-[#131A15] dark:text-[#E0EAE4] placeholder:text-[#8EA898] dark:placeholder:text-[#6A9880] outline-none focus:border-[#0C9248] dark:focus:border-[#17C068] disabled:opacity-60 transition-colors resize-none"
+                  className="flex-1 px-3 py-2 text-[13px] bg-[#F4F5F4] dark:bg-[#0D1410] border border-[#D8E2DC] dark:border-[#1A2C22] rounded-xl text-[#131A15] dark:text-[#E0EAE4] placeholder:text-[#506458] dark:placeholder:text-[#4A6858] outline-none focus:border-[#0C9248] dark:focus:border-[#17C068] disabled:opacity-60 transition-colors resize-none"
                   style={{ minHeight: '38px', maxHeight: '120px', overflowY: 'auto' }}
                 />
                 <button

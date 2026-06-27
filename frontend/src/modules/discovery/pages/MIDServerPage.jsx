@@ -34,7 +34,7 @@ export default function MIDServerPage() {
       <div className="page">
         <div className="page-hdr"><h1 className="page-title">MID Server</h1></div>
         <div className="page-body"><div className="page-inner">
-          <div className="text-[13px] text-[#8EA898] dark:text-[#6A9880]">Loading…</div>
+          <div className="text-[13px] text-[#506458] dark:text-[#4A6858]">Loading…</div>
         </div></div>
       </div>
     )
@@ -53,7 +53,7 @@ export default function MIDServerPage() {
         <div className="page-inner">
 
           {/* Section tab strip */}
-          <div className="flex gap-0 border-b border-[#E0E6E2] dark:border-[#1E3028] mb-5 overflow-x-auto">
+          <div className="flex gap-0 border-b border-[#D8E2DC] dark:border-[#1A2C22] mb-5 overflow-x-auto">
             {SECTIONS.map(({ id, label }) => (
               <button
                 key={id}
@@ -61,7 +61,7 @@ export default function MIDServerPage() {
                 className={`px-3.5 py-2.5 text-[12.5px] font-medium whitespace-nowrap border-b-2 transition-colors duration-100
                   ${activeId === id
                     ? 'text-[#0C9248] dark:text-[#17C068] border-[#0C9248] dark:border-[#17C068]'
-                    : 'text-[#8EA898] dark:text-[#6A9880] border-transparent hover:text-[#2A3A30] dark:hover:text-[#C0D8CC]'
+                    : 'text-[#506458] dark:text-[#4A6858] border-transparent hover:text-[#1E3028] dark:hover:text-[#C0D8CC]'
                   }`}
               >
                 {label}
@@ -93,14 +93,14 @@ function OverviewSection({ data }) {
     <div className="flex flex-col gap-4">
       <div className="card p-5">
         <div className="label-xs mb-2">What is the MID Server?</div>
-        <p className="text-[13px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed mb-3">{data.summary}</p>
-        <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">{data.eccModel}</p>
+        <p className="text-[13px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed mb-3">{data.summary}</p>
+        <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">{data.eccModel}</p>
       </div>
       <div className="card p-5">
         <div className="label-xs mb-3">Key Facts</div>
         <ul className="flex flex-col gap-2">
           {data.keyFacts.map((f, i) => (
-            <li key={i} className="flex items-start gap-2.5 text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5]">
+            <li key={i} className="flex items-start gap-2.5 text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8]">
               <span className="w-5 h-5 rounded-full bg-[#D6F5E3] dark:bg-[rgba(20,102,64,0.25)] text-[#146640] dark:text-[#5EDC9A] flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</span>
               {f}
             </li>
@@ -124,7 +124,7 @@ function CapabilitiesSection({ items }) {
             className={`text-left px-3.5 py-2.5 rounded-lg text-[12.5px] font-medium transition-colors duration-100
               ${active?.id === cap.id
                 ? 'bg-[#D6F5E3] dark:bg-[rgba(20,102,64,0.2)] text-[#146640] dark:text-[#5EDC9A]'
-                : 'text-[#495C52] dark:text-[#607870] hover:bg-[#F4F7F5] dark:hover:bg-white/[0.03]'
+                : 'text-[#3E5448] dark:text-[#5A7870] hover:bg-[#F0F5F2] dark:hover:bg-white/[0.03]'
               }`}
           >
             <span className={`badge badge-${cap.badge} mr-2`}>{cap.name.split(' ')[0]}</span>
@@ -137,12 +137,12 @@ function CapabilitiesSection({ items }) {
           <div className="flex items-center gap-2 mb-3">
             <span className={`badge badge-${active.badge}`}>{active.name}</span>
           </div>
-          <p className="text-[13px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed mb-4">{active.description}</p>
+          <p className="text-[13px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed mb-4">{active.description}</p>
           <div className="label-xs mb-2">How it works</div>
           <ul className="flex flex-col gap-1.5">
             {active.details.map((d, i) => (
-              <li key={i} className="flex items-start gap-2 text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5]">
-                <span className="text-[#8EA898] dark:text-[#5EDC9A] shrink-0 mt-0.5">•</span>
+              <li key={i} className="flex items-start gap-2 text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8]">
+                <span className="text-[#506458] dark:text-[#5EDC9A] shrink-0 mt-0.5">•</span>
                 {d}
               </li>
             ))}
@@ -167,7 +167,7 @@ function PlatformsSection({ data }) {
               <tr key={os.name}>
                 <td className="font-medium">{os.name}</td>
                 <td>{os.versions.join(', ')}</td>
-                <td className="text-[11.5px] text-[#8EA898] dark:text-[#6A9880]">{os.notes}</td>
+                <td className="text-[11.5px] text-[#506458] dark:text-[#4A6858]">{os.notes}</td>
               </tr>
             ))}
           </tbody>
@@ -183,17 +183,17 @@ function PlatformsSection({ data }) {
             { label: 'Memory', value: data.hardware.memory },
             { label: 'Disk',   value: data.hardware.disk },
           ].map(({ label, value }) => (
-            <div key={label} className="flex gap-3 py-2 border-b border-[#EBF0EC] dark:border-[#1E3028] last:border-0">
+            <div key={label} className="flex gap-3 py-2 border-b border-[#EBF0EC] dark:border-[#1A2C22] last:border-0">
               <span className="label-xs w-14 shrink-0 mt-0.5">{label}</span>
-              <span className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5]">{value}</span>
+              <span className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8]">{value}</span>
             </div>
           ))}
-          <p className="text-[11.5px] text-[#8EA898] dark:text-[#6A9880] mt-3 leading-relaxed">{data.hardware.notes}</p>
+          <p className="text-[11.5px] text-[#506458] dark:text-[#4A6858] mt-3 leading-relaxed">{data.hardware.notes}</p>
         </div>
         <div className="card p-5">
           <div className="label-xs mb-3">Java Runtime</div>
-          <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] mb-2">{data.java.version}</p>
-          <p className="text-[12px] text-[#8EA898] dark:text-[#6A9880] leading-relaxed">{data.java.notes}</p>
+          <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] mb-2">{data.java.version}</p>
+          <p className="text-[12px] text-[#506458] dark:text-[#4A6858] leading-relaxed">{data.java.notes}</p>
         </div>
       </div>
     </div>
@@ -207,7 +207,7 @@ function NetworkSection({ data }) {
       <div className="card p-4">
         <div className="flex gap-2 items-start">
           <span className="badge badge-green mt-0.5">Outbound only</span>
-          <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">{data.summary}</p>
+          <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">{data.summary}</p>
         </div>
       </div>
 
@@ -222,7 +222,7 @@ function NetworkSection({ data }) {
                 <td><span className="mono">{r.port}</span></td>
                 <td>{r.protocol}</td>
                 <td><span className="mono text-[11px]">{r.destination}</span></td>
-                <td className="text-[11.5px] text-[#8EA898] dark:text-[#6A9880]">{r.purpose}</td>
+                <td className="text-[11.5px] text-[#506458] dark:text-[#4A6858]">{r.purpose}</td>
               </tr>
             ))}
           </tbody>
@@ -239,7 +239,7 @@ function NetworkSection({ data }) {
               <tr key={i}>
                 <td><span className="mono">{r.port}</span></td>
                 <td className="whitespace-nowrap">{r.protocol}</td>
-                <td className="text-[11.5px] text-[#8EA898] dark:text-[#6A9880]">{r.purpose}</td>
+                <td className="text-[11.5px] text-[#506458] dark:text-[#4A6858]">{r.purpose}</td>
               </tr>
             ))}
           </tbody>
@@ -248,7 +248,7 @@ function NetworkSection({ data }) {
 
       <div className="card p-4">
         <div className="label-xs mb-1.5">Proxy Support</div>
-        <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">{data.proxySupport}</p>
+        <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">{data.proxySupport}</p>
       </div>
     </div>
   )
@@ -264,11 +264,11 @@ function SecuritySection({ data }) {
   ]
   return (
     <div className="flex flex-col gap-4">
-      <div className="card divide-y divide-[#EBF0EC] dark:divide-[#1E3028]">
+      <div className="card divide-y divide-[#E6EDEA] dark:divide-[#1A2C22]">
         {fields.map(({ label, value }) => (
           <div key={label} className="flex gap-4 px-5 py-3.5">
             <span className="label-xs w-36 shrink-0 mt-0.5">{label}</span>
-            <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">{value}</p>
+            <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">{value}</p>
           </div>
         ))}
       </div>
@@ -276,8 +276,8 @@ function SecuritySection({ data }) {
         <div className="label-xs mb-3">Security Best Practices</div>
         <ul className="flex flex-col gap-2">
           {data.notes.map((n, i) => (
-            <li key={i} className="flex items-start gap-2 text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5]">
-              <span className="text-[#8EA898] dark:text-[#5EDC9A] shrink-0 mt-0.5">→</span>
+            <li key={i} className="flex items-start gap-2 text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8]">
+              <span className="text-[#506458] dark:text-[#5EDC9A] shrink-0 mt-0.5">→</span>
               {n}
             </li>
           ))}
@@ -294,11 +294,11 @@ function ConfigSection({ data }) {
       <div className="card p-4">
         <div className="flex items-center gap-3 flex-wrap">
           <span className="label-xs">Config file:</span>
-          <span className="mono text-[12px] text-[#2A3A30] dark:text-[#93B5A5]">{data.configFile}</span>
+          <span className="mono text-[12px] text-[#1E3028] dark:text-[#A8C4B8]">{data.configFile}</span>
           <span className="label-xs ml-2">Location:</span>
-          <span className="mono text-[12px] text-[#2A3A30] dark:text-[#93B5A5]">{data.location}</span>
+          <span className="mono text-[12px] text-[#1E3028] dark:text-[#A8C4B8]">{data.location}</span>
         </div>
-        <p className="text-[12px] text-[#8EA898] dark:text-[#6A9880] mt-2">{data.description}</p>
+        <p className="text-[12px] text-[#506458] dark:text-[#4A6858] mt-2">{data.description}</p>
       </div>
       <div className="card p-5">
         <div className="label-xs mb-3">Parameters</div>
@@ -319,7 +319,7 @@ function ConfigSection({ data }) {
                   <td className="align-top">
                     {p.default ? <span className="mono text-[11px]">{p.default}</span> : <span className="text-[#C4D4CC]">—</span>}
                   </td>
-                  <td className="text-[11.5px] text-[#8EA898] dark:text-[#6A9880] align-top">{p.description}</td>
+                  <td className="text-[11.5px] text-[#506458] dark:text-[#4A6858] align-top">{p.description}</td>
                 </tr>
               ))}
             </tbody>
@@ -341,7 +341,7 @@ function StatesSection({ states }) {
             key={s.id}
             onClick={() => setActive(s)}
             className={`px-3.5 py-2 rounded-xl text-[12.5px] font-medium transition-all duration-100
-              ${active?.id === s.id ? 'ring-2' : 'border border-[#E0E6E2] dark:border-[#1E3028] hover:shadow-sm'}`}
+              ${active?.id === s.id ? 'ring-2' : 'border border-[#D8E2DC] dark:border-[#1A2C22] hover:shadow-sm'}`}
             style={active?.id === s.id ? { boxShadow: `0 0 0 2px ${s.color}` } : {}}
           >
             <span className={`badge badge-${s.badge} mr-1.5`}>{s.name}</span>
@@ -355,17 +355,17 @@ function StatesSection({ states }) {
             <h3 className="text-[14px] font-semibold text-[#131A15] dark:text-[#E0EAE4]">{active.name}</h3>
             <span className={`badge badge-${active.badge}`}>{active.name}</span>
           </div>
-          <p className="text-[13px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">{active.description}</p>
+          <p className="text-[13px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">{active.description}</p>
         </div>
       )}
       <div className="card p-5">
         <div className="label-xs mb-3">All States at a Glance</div>
-        <div className="flex flex-col divide-y divide-[#EBF0EC] dark:divide-[#1E3028]">
+        <div className="flex flex-col divide-y divide-[#E6EDEA] dark:divide-[#1A2C22]">
           {states.map((s) => (
             <div key={s.id} className="flex items-start gap-3 py-2.5">
               <div className="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style={{ background: s.color }} />
-              <span className="text-[12.5px] font-medium text-[#2A3A30] dark:text-[#93B5A5] w-20 shrink-0">{s.name}</span>
-              <span className="text-[12px] text-[#8EA898] dark:text-[#6A9880] leading-relaxed">{s.description}</span>
+              <span className="text-[12.5px] font-medium text-[#1E3028] dark:text-[#A8C4B8] w-20 shrink-0">{s.name}</span>
+              <span className="text-[12px] text-[#506458] dark:text-[#4A6858] leading-relaxed">{s.description}</span>
             </div>
           ))}
         </div>
@@ -380,28 +380,28 @@ function ClusteringSection({ data }) {
     <div className="flex flex-col gap-4">
       <div className="card p-5">
         <div className="label-xs mb-2">Overview</div>
-        <p className="text-[13px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">{data.summary}</p>
+        <p className="text-[13px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">{data.summary}</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="card p-5">
           <div className="label-xs mb-2">MID Server Affinity</div>
-          <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed mb-2">{data.affinity.description}</p>
+          <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed mb-2">{data.affinity.description}</p>
           <span className="label-xs">Table: </span>
-          <span className="mono text-[11px] text-[#2A3A30] dark:text-[#93B5A5]">{data.affinity.table}</span>
+          <span className="mono text-[11px] text-[#1E3028] dark:text-[#A8C4B8]">{data.affinity.table}</span>
         </div>
         <div className="card p-5">
           <div className="label-xs mb-2">MID Server Pools</div>
-          <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed mb-3">{data.pool.description}</p>
+          <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed mb-3">{data.pool.description}</p>
           <div className="label-xs mb-2">High Availability Behaviour</div>
-          <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">{data.ha}</p>
+          <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">{data.ha}</p>
         </div>
       </div>
       <div className="card p-5">
         <div className="label-xs mb-3">Deployment Recommendations</div>
         <ul className="flex flex-col gap-2">
           {data.notes.map((n, i) => (
-            <li key={i} className="flex items-start gap-2 text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5]">
-              <span className="text-[#8EA898] dark:text-[#5EDC9A] shrink-0 mt-0.5">•</span>
+            <li key={i} className="flex items-start gap-2 text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8]">
+              <span className="text-[#506458] dark:text-[#5EDC9A] shrink-0 mt-0.5">•</span>
               {n}
             </li>
           ))}
@@ -429,7 +429,7 @@ function LifecycleSection({ data }) {
             className={`px-3.5 py-2 rounded-lg text-[12.5px] font-medium transition-colors duration-100
               ${active === id
                 ? 'bg-[#D6F5E3] dark:bg-[rgba(20,102,64,0.2)] text-[#146640] dark:text-[#5EDC9A]'
-                : 'text-[#8EA898] dark:text-[#6A9880] hover:bg-[#F4F7F5] dark:hover:bg-white/[0.03]'
+                : 'text-[#506458] dark:text-[#4A6858] hover:bg-[#F0F5F2] dark:hover:bg-white/[0.03]'
               }`}
           >
             {label}
@@ -442,8 +442,8 @@ function LifecycleSection({ data }) {
           <div className="label-xs mb-3">Installation Steps</div>
           <div className="flex flex-col gap-3">
             {data.installation.steps.map((step, i) => (
-              <div key={i} className="flex items-start gap-3 text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5]">
-                <div className="w-5 h-5 rounded-full bg-[#EBF0EC] dark:bg-[#1E3028] text-[#8EA898] dark:text-[#6A9880] flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</div>
+              <div key={i} className="flex items-start gap-3 text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8]">
+                <div className="w-5 h-5 rounded-full bg-[#E4EDEA] dark:bg-[#1A2C22] text-[#506458] dark:text-[#4A6858] flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</div>
                 <span className="leading-relaxed">{step}</span>
               </div>
             ))}
@@ -457,12 +457,12 @@ function LifecycleSection({ data }) {
             <div className="label-xs">Method</div>
             <span className="badge badge-sky">{data.upgrade.method}</span>
           </div>
-          <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed mb-4">{data.upgrade.description}</p>
+          <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed mb-4">{data.upgrade.description}</p>
           <div className="label-xs mb-2">Notes</div>
           <ul className="flex flex-col gap-1.5">
             {data.upgrade.notes.map((n, i) => (
-              <li key={i} className="flex items-start gap-2 text-[12px] text-[#2A3A30] dark:text-[#93B5A5]">
-                <span className="text-[#8EA898] dark:text-[#5EDC9A] shrink-0">→</span>
+              <li key={i} className="flex items-start gap-2 text-[12px] text-[#1E3028] dark:text-[#A8C4B8]">
+                <span className="text-[#506458] dark:text-[#5EDC9A] shrink-0">→</span>
                 {n}
               </li>
             ))}
@@ -472,12 +472,12 @@ function LifecycleSection({ data }) {
 
       {active === 'validation' && (
         <div className="card p-5">
-          <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed mb-4">{data.validation.description}</p>
+          <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed mb-4">{data.validation.description}</p>
           <div className="label-xs mb-3">Validation Steps</div>
           <div className="flex flex-col gap-2.5">
             {data.validation.steps.map((step, i) => (
-              <div key={i} className="flex items-start gap-3 text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5]">
-                <div className="w-5 h-5 rounded-full bg-[#EBF0EC] dark:bg-[#1E3028] text-[#8EA898] dark:text-[#6A9880] flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</div>
+              <div key={i} className="flex items-start gap-3 text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8]">
+                <div className="w-5 h-5 rounded-full bg-[#E4EDEA] dark:bg-[#1A2C22] text-[#506458] dark:text-[#4A6858] flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</div>
                 <span className="leading-relaxed">{step}</span>
               </div>
             ))}
@@ -501,7 +501,7 @@ function TroubleshootingSection({ items }) {
             className={`text-left px-3.5 py-2.5 rounded-lg text-[12px] transition-colors duration-100
               ${active === i
                 ? 'bg-[#FEE2E2] dark:bg-[rgba(153,27,27,0.15)] text-[#991B1B] dark:text-[#FCA5A5]'
-                : 'text-[#495C52] dark:text-[#607870] hover:bg-[#F4F7F5] dark:hover:bg-white/[0.03]'
+                : 'text-[#3E5448] dark:text-[#5A7870] hover:bg-[#F0F5F2] dark:hover:bg-white/[0.03]'
               }`}
           >
             {item.symptom}
@@ -518,8 +518,8 @@ function TroubleshootingSection({ items }) {
             <div className="label-xs mb-2">Possible Causes</div>
             <ul className="flex flex-col gap-1.5">
               {items[active].causes.map((c, i) => (
-                <li key={i} className="flex items-start gap-2 text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5]">
-                  <span className="text-[#8EA898] dark:text-[#6A9880] shrink-0">•</span>
+                <li key={i} className="flex items-start gap-2 text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8]">
+                  <span className="text-[#506458] dark:text-[#4A6858] shrink-0">•</span>
                   {c}
                 </li>
               ))}

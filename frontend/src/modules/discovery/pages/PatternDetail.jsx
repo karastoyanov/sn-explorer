@@ -125,7 +125,7 @@ function CopyableId({ id }) {
     <button
       onClick={copy}
       title="Copy sys_id"
-      className="font-mono text-[12px] text-[#8EA898] dark:text-[#6A9880] hover:text-[#0C9248] dark:hover:text-[#17C068] transition-colors cursor-pointer select-all"
+      className="font-mono text-[12px] text-[#506458] dark:text-[#4A6858] hover:text-[#0C9248] dark:hover:text-[#17C068] transition-colors cursor-pointer select-all"
     >
       {copied ? '✓ copied' : id}
     </button>
@@ -137,10 +137,10 @@ function CopyableId({ id }) {
 function Skeleton() {
   return (
     <div className="p-6 flex flex-col gap-4 animate-pulse">
-      <div className="h-6 w-72 bg-[#E0E6E2] dark:bg-[#1E3028] rounded" />
-      <div className="h-4 w-48 bg-[#EBF0EC] dark:bg-[#1E3028] rounded" />
+      <div className="h-6 w-72 bg-[#E0E6E2] dark:bg-[#1A2C22] rounded" />
+      <div className="h-4 w-48 bg-[#E4EDEA] dark:bg-[#1A2C22] rounded" />
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
-        {[1,2,3,4].map(i => <div key={i} className="h-16 bg-[#EBF0EC] dark:bg-[#182419] rounded-lg" />)}
+        {[1,2,3,4].map(i => <div key={i} className="h-16 bg-[#E4EDEA] dark:bg-[#172018] rounded-lg" />)}
       </div>
     </div>
   )
@@ -211,7 +211,7 @@ export default function PatternDetail() {
               <Badge cls={catCls}>{pattern.category}</Badge>
               <Badge cls={dtCls}>{pattern.discoveryType}</Badge>
               {pattern.mainCi && (
-                <span className="text-[11.5px] text-[#8EA898] dark:text-[#6A9880]">
+                <span className="text-[11.5px] text-[#506458] dark:text-[#4A6858]">
                   main CI: <Mono>{pattern.mainCi}</Mono>
                 </span>
               )}
@@ -323,7 +323,7 @@ function OverviewTab({ pattern, statCards }) {
       {/* Description */}
       {pattern.description && (
         <Card title="Description">
-          <p className="px-4 py-3 text-[13px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">
+          <p className="px-4 py-3 text-[13px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">
             {pattern.description}
           </p>
         </Card>
@@ -350,7 +350,7 @@ function OverviewTab({ pattern, statCards }) {
                   <IdentificationRow label="Entry point">
                     <span>{ENTRY_POINT_LABEL[ident.entryPointType] || ident.entryPointType}</span>
                     {ident.entryPointType !== (ENTRY_POINT_LABEL[ident.entryPointType] || '') && (
-                      <span className="ml-1.5 font-mono text-[11px] text-[#8EA898] dark:text-[#6A9880]">({ident.entryPointType})</span>
+                      <span className="ml-1.5 font-mono text-[11px] text-[#506458] dark:text-[#4A6858]">({ident.entryPointType})</span>
                     )}
                   </IdentificationRow>
                 )}
@@ -380,7 +380,7 @@ function OverviewTab({ pattern, statCards }) {
                   <span className="text-[13px] font-semibold text-[#131A15] dark:text-[#E0EAE4]">
                     {conn.name || `Connection ${ci + 1}`}
                   </span>
-                  <span className="text-[10.5px] text-[#8EA898] dark:text-[#6A9880]">
+                  <span className="text-[10.5px] text-[#506458] dark:text-[#4A6858]">
                     {conn.stepCount} step{conn.stepCount !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -389,10 +389,10 @@ function OverviewTab({ pattern, statCards }) {
                   const typeLabel = CONN_TYPE_LABEL[cc.connectionType] || cc.connectionType
                   const staticAttrs = Object.entries(cc.attributes || {}).filter(([, v]) => v && !v.startsWith('$') && !v.startsWith('<'))
                   return (
-                    <div key={j} className="flex flex-wrap items-start gap-2 pl-3 border-l-2 border-[#EBF0EC] dark:border-[#1E3028]">
+                    <div key={j} className="flex flex-wrap items-start gap-2 pl-3 border-l-2 border-[#EBF0EC] dark:border-[#1A2C22]">
                       <Badge cls={typeCls}>{typeLabel}</Badge>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px]">
-                        <span className="text-[#8EA898] dark:text-[#6A9880]">→</span>
+                        <span className="text-[#506458] dark:text-[#4A6858]">→</span>
                         <Mono>{cc.targetCiType}</Mono>
                         {cc.entryPointType && (
                           <>
@@ -401,7 +401,7 @@ function OverviewTab({ pattern, statCards }) {
                           </>
                         )}
                         {staticAttrs.length > 0 && (
-                          <span className="text-[#8EA898] dark:text-[#6A9880]">
+                          <span className="text-[#506458] dark:text-[#4A6858]">
                             · {staticAttrs.map(([k, v]) => `${k}=${v}`).join(', ')}
                           </span>
                         )}
@@ -459,7 +459,7 @@ function OverviewTab({ pattern, statCards }) {
                         <div className="flex items-center gap-2">
                           <Mono>{ci.ciType || '—'}</Mono>
                           {ci.ciType?.startsWith('cmdb_ci_') && (
-                            <span className="text-[9.5px] text-[#8EA898] dark:text-[#6A9880] px-1 py-0.5 bg-[#EBF0EC] dark:bg-[#182419] rounded">CMDB</span>
+                            <span className="text-[9.5px] text-[#506458] dark:text-[#4A6858] px-1 py-0.5 bg-[#E4EDEA] dark:bg-[#172018] rounded">CMDB</span>
                           )}
                         </div>
                       </td>
@@ -496,7 +496,7 @@ function OverviewTab({ pattern, statCards }) {
                   <div className="flex-1 min-w-0">
                     <div className="text-[12.5px] font-medium text-[#131A15] dark:text-[#E0EAE4]">{name}</div>
                     {classifier && (
-                      <div className="text-[11px] text-[#8EA898] dark:text-[#6A9880] mt-0.5">
+                      <div className="text-[11px] text-[#506458] dark:text-[#4A6858] mt-0.5">
                         Classifier: <Mono>{classifier}</Mono>
                       </div>
                     )}
@@ -552,31 +552,31 @@ function TablesRelationsTab({ pattern }) {
                 const isOpen     = expandedTables.has(i)
                 const ttMeta     = TABLE_TYPE_META[t.tableType] || TABLE_TYPE_META.temp
                 const borderCls  = TABLE_TYPE_BORDER[t.tableType]     || 'border-l-[3px] border-[#D4D1CA] dark:border-[#363A52]'
-                const expandedBg = TABLE_TYPE_EXPANDED_BG[t.tableType] || 'bg-[#F9FAF9] dark:bg-[#182419]/40'
+                const expandedBg = TABLE_TYPE_EXPANDED_BG[t.tableType] || 'bg-[#F5F8F6] dark:bg-[#172018]/40'
                 const columns    = t.columns || t.explicitFields || []
                 return (
-                  <div key={t.table + i} className={`rounded-lg overflow-hidden border border-[#E0E6E2] dark:border-[#1E3028] ${borderCls}`}>
+                  <div key={t.table + i} className={`rounded-lg overflow-hidden border border-[#D8E2DC] dark:border-[#1A2C22] ${borderCls}`}>
                     <button
                       onClick={() => toggleTable(i)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#F9FAF9] dark:hover:bg-white/[0.02] transition-colors text-left bg-white dark:bg-[#141E18]"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#F5F8F6] dark:hover:bg-white/[0.02] transition-colors text-left bg-white dark:bg-[#141E18]"
                     >
                       <span
-                        className="text-[9px] text-[#8EA898] dark:text-[#6A9880]"
+                        className="text-[9px] text-[#506458] dark:text-[#4A6858]"
                         style={{
                           display: 'inline-block',
                           transform: isOpen ? 'none' : 'rotate(-90deg)',
                           transition: 'transform 0.15s',
                         }}
                       >▾</span>
-                      <span className="text-[10.5px] text-[#8EA898] dark:text-[#6A9880] tabular-nums w-5 shrink-0 font-mono">{i + 1}.</span>
+                      <span className="text-[10.5px] text-[#506458] dark:text-[#4A6858] tabular-nums w-5 shrink-0 font-mono">{i + 1}.</span>
                       <Mono>{t.table}</Mono>
                       <Badge cls={ttMeta.badge}>{ttMeta.label}</Badge>
-                      <span className="ml-auto text-[11px] text-[#8EA898] dark:text-[#6A9880] tabular-nums">
+                      <span className="ml-auto text-[11px] text-[#506458] dark:text-[#4A6858] tabular-nums">
                         {columns.length} col{columns.length !== 1 ? 's' : ''}
                       </span>
                     </button>
                     {isOpen && (
-                      <div className={`px-4 pb-3 pt-2.5 flex flex-col gap-2.5 ${expandedBg} border-t border-[#E0E6E2] dark:border-[#1E3028]`}>
+                      <div className={`px-4 pb-3 pt-2.5 flex flex-col gap-2.5 ${expandedBg} border-t border-[#D8E2DC] dark:border-[#1A2C22]`}>
                         {columns.length > 0 && (
                           <div>
                             <div className="label-xs mb-1.5">Columns</div>
@@ -584,7 +584,7 @@ function TablesRelationsTab({ pattern }) {
                               {columns.map(f => (
                                 <span
                                   key={f}
-                                  className="font-mono text-[11px] px-2 py-0.5 bg-white dark:bg-[#141E18] border border-[#E0E6E2] dark:border-[#1E3028] rounded text-[#0C9248] dark:text-[#17C068]"
+                                  className="font-mono text-[11px] px-2 py-0.5 bg-white dark:bg-[#141E18] border border-[#D8E2DC] dark:border-[#1A2C22] rounded text-[#0C9248] dark:text-[#17C068]"
                                 >
                                   {f}
                                 </span>
@@ -603,7 +603,7 @@ function TablesRelationsTab({ pattern }) {
                           </div>
                         )}
                         {!columns.length && !t.sourceTables?.length && (
-                          <div className="text-[12px] text-[#8EA898] dark:text-[#6A9880]">No column detail available.</div>
+                          <div className="text-[12px] text-[#506458] dark:text-[#4A6858]">No column detail available.</div>
                         )}
                       </div>
                     )}
@@ -638,9 +638,9 @@ function TablesRelationsTab({ pattern }) {
                         <Badge cls={opMeta.cls}>{opMeta.label}</Badge>
                       </td>
                       <td><Mono>{r.table1 || '—'}</Mono></td>
-                      <td className="text-[#8EA898] dark:text-[#6A9880]">{r.key1 || '—'}</td>
+                      <td className="text-[#506458] dark:text-[#4A6858]">{r.key1 || '—'}</td>
                       <td><Mono>{r.table2 || '—'}</Mono></td>
-                      <td className="text-[#8EA898] dark:text-[#6A9880]">{r.key2 || '—'}</td>
+                      <td className="text-[#506458] dark:text-[#4A6858]">{r.key2 || '—'}</td>
                       <td className="text-[#131A15] dark:text-[#E0EAE4] font-medium">{r.relationshipType || r.relType || '—'}</td>
                       <td><Mono>{r.resultTable || '—'}</Mono></td>
                     </tr>
@@ -693,17 +693,17 @@ function NdlStepsTab({ pattern }) {
                   <div key={i}>
                     <button
                       onClick={() => toggleStep(i)}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F9FAF9] dark:hover:bg-white/[0.02] transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F5F8F6] dark:hover:bg-white/[0.02] transition-colors text-left"
                     >
                       <span
-                        className="text-[9px] text-[#8EA898] dark:text-[#6A9880]"
+                        className="text-[9px] text-[#506458] dark:text-[#4A6858]"
                         style={{
                           display: 'inline-block',
                           transform: isOpen ? 'none' : 'rotate(-90deg)',
                           transition: 'transform 0.15s',
                         }}
                       >▾</span>
-                      <span className="text-[11px] text-[#8EA898] dark:text-[#6A9880] tabular-nums w-5 shrink-0">{i + 1}.</span>
+                      <span className="text-[11px] text-[#506458] dark:text-[#4A6858] tabular-nums w-5 shrink-0">{i + 1}.</span>
                       <span className="text-[13px] font-medium text-[#131A15] dark:text-[#E0EAE4] flex-1 min-w-0 truncate">
                         {step.name || `Step ${i + 1}`}
                       </span>
@@ -712,14 +712,14 @@ function NdlStepsTab({ pattern }) {
                           {[...new Set(step.operations.map(o => o.type))].map(t => (
                             <span key={t} className="w-2 h-2 rounded-full" style={{ background: OP_COLOR[t]?.dot }} title={OP_COLOR[t]?.label} />
                           ))}
-                          <span className="text-[10.5px] text-[#8EA898] dark:text-[#6A9880] ml-1">{opCount} op{opCount !== 1 ? 's' : ''}</span>
+                          <span className="text-[10.5px] text-[#506458] dark:text-[#4A6858] ml-1">{opCount} op{opCount !== 1 ? 's' : ''}</span>
                         </div>
                       ) : (
                         <span className="text-[10.5px] text-[#C8D4CE] dark:text-[#1E3028] shrink-0">no ops</span>
                       )}
                     </button>
                     {isOpen && opCount > 0 && (
-                      <div className="px-4 pb-3 flex flex-col gap-2 bg-[#F9FAF9] dark:bg-[#182419]/40">
+                      <div className="px-4 pb-3 flex flex-col gap-2 bg-[#F5F8F6] dark:bg-[#172018]/40">
                         {step.operations.map((op, j) => (
                           <StepOperation key={j} op={op} />
                         ))}
@@ -738,12 +738,12 @@ function NdlStepsTab({ pattern }) {
 }
 
 function OpDetail({ op }) {
-  const g     = 'text-[#8EA898] dark:text-[#6A9880]'
+  const g     = 'text-[#506458] dark:text-[#4A6858]'
   const arrow = <span className={g}>→</span>
   const plus  = <span className={g}>+</span>
 
   if (op.type === 'transform') return (
-    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] text-[#2A3A30] dark:text-[#93B5A5] mt-1">
+    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] text-[#1E3028] dark:text-[#A8C4B8] mt-1">
       {op.srcTable && <><Mono>{op.srcTable}</Mono>{arrow}</>}
       {op.targetTable && <Mono>{op.targetTable}</Mono>}
       {op.setFields?.length > 0 && (
@@ -765,20 +765,20 @@ function OpDetail({ op }) {
   )
 
   if (op.type === 'custom_operation') return (
-    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] mt-1 text-[#2A3A30] dark:text-[#93B5A5]">
+    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] mt-1 text-[#1E3028] dark:text-[#A8C4B8]">
       {op.targetTable && <><span className={g}>target:</span><Mono>{op.targetTable}</Mono></>}
     </div>
   )
 
   if (op.type === 'filter') return (
-    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] mt-1 text-[#2A3A30] dark:text-[#93B5A5]">
+    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] mt-1 text-[#1E3028] dark:text-[#A8C4B8]">
       {op.srcTable && <><Mono>{op.srcTable}</Mono>{arrow}</>}
       {op.targetTable && <Mono>{op.targetTable}</Mono>}
     </div>
   )
 
   if (op.type === 'merge' || op.type === 'union') return (
-    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] mt-1 text-[#2A3A30] dark:text-[#93B5A5]">
+    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] mt-1 text-[#1E3028] dark:text-[#A8C4B8]">
       {op.table1 && <Mono>{op.table1}</Mono>}
       {plus}
       {op.table2 && <Mono>{op.table2}</Mono>}
@@ -787,24 +787,24 @@ function OpDetail({ op }) {
   )
 
   if (op.type === 'set_attr') return (
-    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] mt-1 text-[#2A3A30] dark:text-[#93B5A5]">
+    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] mt-1 text-[#1E3028] dark:text-[#A8C4B8]">
       {op.attr && <Mono>{op.attr}</Mono>}
     </div>
   )
 
   if (op.type === 'match') return (
-    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] mt-1 text-[#2A3A30] dark:text-[#93B5A5]">
+    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] mt-1 text-[#1E3028] dark:text-[#A8C4B8]">
       {op.srcTable && <><Mono>{op.srcTable}</Mono>{arrow}</>}
       {op.targetTable && <Mono>{op.targetTable}</Mono>}
     </div>
   )
 
   if (op.type === 'runcmd_to_var' && op.command) return (
-    <div className="text-[11px] mt-1 font-mono text-[#8EA898] dark:text-[#6A9880] truncate">{op.command}</div>
+    <div className="text-[11px] mt-1 font-mono text-[#506458] dark:text-[#4A6858] truncate">{op.command}</div>
   )
 
   if (op.srcVar || op.srcTable) return (
-    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] mt-1 text-[#2A3A30] dark:text-[#93B5A5]">
+    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] mt-1 text-[#1E3028] dark:text-[#A8C4B8]">
       {(op.srcVar || op.srcTable) && <Mono>{op.srcVar || op.srcTable}</Mono>}
     </div>
   )
@@ -885,7 +885,7 @@ function ScriptGroup({ title, subtitle, scripts, phaseColor, phaseLabel }) {
   return (
     <Card title={title} count={scripts.length}>
       {subtitle && (
-        <div className="px-4 py-2 text-[11.5px] text-[#2A3A30] dark:text-[#93B5A5] border-b border-[#E0E6E2] dark:border-[#1E3028] bg-[#F9FAF9] dark:bg-[#182419]/40">
+        <div className="px-4 py-2 text-[11.5px] text-[#1E3028] dark:text-[#A8C4B8] border-b border-[#D8E2DC] dark:border-[#1A2C22] bg-[#F5F8F6] dark:bg-[#172018]/40">
           {subtitle}
         </div>
       )}
@@ -911,11 +911,11 @@ function ScriptCard({ script: s, phaseColor, phaseLabel }) {
         <div className="flex items-center gap-2 shrink-0">
           {!s.active && <Badge cls="badge-gray">inactive</Badge>}
           {s.executionLabel && (
-            <span className="text-[10.5px] text-[#8EA898] dark:text-[#6A9880]">
+            <span className="text-[10.5px] text-[#506458] dark:text-[#4A6858]">
               {s.executionLabel}
             </span>
           )}
-          <span className="text-[10.5px] text-[#8EA898] dark:text-[#6A9880]">order {s.order}</span>
+          <span className="text-[10.5px] text-[#506458] dark:text-[#4A6858]">order {s.order}</span>
           <button
             onClick={() => setExpanded(e => !e)}
             className="btn-ghost"
@@ -930,7 +930,7 @@ function ScriptCard({ script: s, phaseColor, phaseLabel }) {
         </div>
       )}
       {expanded && !s.script && (
-        <div className="px-4 pb-4 text-[12px] text-[#8EA898] dark:text-[#6A9880]">No script body.</div>
+        <div className="px-4 pb-4 text-[12px] text-[#506458] dark:text-[#4A6858]">No script body.</div>
       )}
     </div>
   )
