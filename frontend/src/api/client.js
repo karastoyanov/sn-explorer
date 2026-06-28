@@ -27,6 +27,11 @@ export const discoveryApi = {
   getMidServer:   () => get('/discovery/mid-server'),
 }
 
+export const cmdbApi = {
+  getData:   (includeFields = false) => get(`/cmdb/data${includeFields ? '?fields=true' : ''}`),
+  getStatus: () => get('/cmdb/status'),
+}
+
 export const modulesApi = {
   getAll: () => get('/modules'),
 }

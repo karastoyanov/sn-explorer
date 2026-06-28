@@ -155,7 +155,7 @@ export default function PatternsList() {
           {/* Pattern list */}
           {loading && (
             <div className="card">
-              <div className="p-6 text-center text-[13px] text-[#8EA898] dark:text-[#6A9880]">Loading patterns…</div>
+              <div className="p-6 text-center text-[13px] text-[#506458] dark:text-[#4A6858]">Loading patterns…</div>
             </div>
           )}
 

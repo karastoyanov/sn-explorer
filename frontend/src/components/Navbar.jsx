@@ -1,15 +1,30 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import ThemeToggle from './ThemeToggle'
 
-const NAV_LINKS = [
-  { to: '/discovery',             label: 'Overview',              end: true },
-  { to: '/discovery/patterns',    label: 'Patterns' },
-  { to: '/discovery/classifiers', label: 'Classifiers' },
-  { to: '/discovery/stages',      label: 'Discovery Stages' },
-  { to: '/discovery/ire',         label: 'IRE & Reconciliation' },
-  { to: '/discovery/credentials', label: 'Credentials' },
-  { to: '/discovery/mid-server',  label: 'MID Server' },
+const NAV_GROUPS = [
+  {
+    id: 'discovery',
+    label: 'Discovery',
+    basePath: '/discovery',
+    links: [
+      { to: '/discovery',             label: 'Overview',         end: true },
+      { to: '/discovery/patterns',    label: 'Patterns' },
+      { to: '/discovery/classifiers', label: 'Classifiers' },
+      { to: '/discovery/stages',      label: 'Discovery Stages' },
+      { to: '/discovery/credentials', label: 'Credentials' },
+      { to: '/discovery/mid-server',  label: 'MID Server' },
+    ],
+  },
+  {
+    id: 'cmdb',
+    label: 'CMDB Explorer',
+    basePath: '/cmdb',
+    links: [
+      { to: '/cmdb/ire',           label: 'IRE & Reconciliation' },
+      { to: '/cmdb/class-manager', label: 'CMDB Class Manager' },
+    ],
+  },
 ]
 
 function IconChat() {
@@ -29,6 +44,14 @@ function IconPulse() {
   )
 }
 
+function IconChevron() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+      <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
 function IconHamburger({ open }) {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -41,9 +64,50 @@ function IconHamburger({ open }) {
   )
 }
 
+function NavDropdown({ group }) {
+  const [open, setOpen] = useState(false)
+  const location = useLocation()
+  const isGroupActive = location.pathname.startsWith(group.basePath)
+
+  return (
+    <div
+      className="navbar-dropdown"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button className={`navbar-dropdown-trigger${isGroupActive ? ' active' : ''}`}>
+        {group.label}
+        <span className={`navbar-dropdown-chevron${open ? ' open' : ''}`}>
+          <IconChevron />
+        </span>
+      </button>
+
+      {open && (
+        <div className="navbar-dropdown-menu">
+          {group.links.map(({ to, label, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) => `navbar-dropdown-item${isActive ? ' active' : ''}`}
+              onClick={() => setOpen(false)}
+            >
+              {label}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Navbar({ onChatOpen }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [mobileExpanded, setMobileExpanded] = useState({})
   const closeMobile = () => setMobileOpen(false)
+
+  const toggleMobileGroup = (id) =>
+    setMobileExpanded(prev => ({ ...prev, [id]: !prev[id] }))
 
   return (
     <>
@@ -61,17 +125,10 @@ export default function Navbar({ onChatOpen }) {
           </div>
         </div>
 
-        {/* Desktop nav links */}
+        {/* Desktop dropdown groups */}
         <div className="navbar-links">
-          {NAV_LINKS.map(({ to, label, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) => `navbar-link${isActive ? ' active' : ''}`}
-            >
-              {label}
-            </NavLink>
+          {NAV_GROUPS.map(group => (
+            <NavDropdown key={group.id} group={group} />
           ))}
         </div>
 
@@ -115,24 +172,33 @@ export default function Navbar({ onChatOpen }) {
       {/* Mobile dropdown menu */}
       {mobileOpen && (
         <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-30"
-            onClick={closeMobile}
-          />
+          <div className="fixed inset-0 z-30" onClick={closeMobile} />
 
-          {/* Menu panel */}
           <div className="navbar-mobile-menu">
-            {NAV_LINKS.map(({ to, label, end }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={end}
-                className={({ isActive }) => `navbar-mobile-link${isActive ? ' active' : ''}`}
-                onClick={closeMobile}
-              >
-                {label}
-              </NavLink>
+            {NAV_GROUPS.map(group => (
+              <div key={group.id}>
+                <button
+                  className="navbar-mobile-group-hdr"
+                  onClick={() => toggleMobileGroup(group.id)}
+                >
+                  {group.label}
+                  <span className={`navbar-dropdown-chevron${mobileExpanded[group.id] ? ' open' : ''}`}>
+                    <IconChevron />
+                  </span>
+                </button>
+
+                {mobileExpanded[group.id] && group.links.map(({ to, label, end }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={end}
+                    className={({ isActive }) => `navbar-mobile-link navbar-mobile-sublink${isActive ? ' active' : ''}`}
+                    onClick={closeMobile}
+                  >
+                    {label}
+                  </NavLink>
+                ))}
+              </div>
             ))}
 
             {/* Footer row: AI btn */}

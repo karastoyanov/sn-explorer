@@ -12,7 +12,7 @@ export default function IREPage() {
     return (
       <div className="page">
         <div className="page-hdr">
-          <div className="page-title text-[#8EA898] dark:text-[#6A9880]">Loading…</div>
+          <div className="page-title text-[#506458] dark:text-[#4A6858]">Loading…</div>
         </div>
       </div>
     )
@@ -34,7 +34,7 @@ export default function IREPage() {
           {/* Overview */}
           <div className="card">
             <div className="card-hdr">{data.overview.title}</div>
-            <div className="p-4 text-[13px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed space-y-3">
+            <div className="p-4 text-[13px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed space-y-3">
               <p>{data.overview.summary}</p>
               <div>
                 <div className="label-xs mb-2">Who calls IRE</div>
@@ -50,28 +50,28 @@ export default function IREPage() {
           {/* Identification */}
           <div className="card">
             <div className="card-hdr">{data.identification.title}</div>
-            <p className="px-4 pt-3 pb-2 text-[13px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">
+            <p className="px-4 pt-3 pb-2 text-[13px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">
               {data.identification.description}
             </p>
 
             {/* Outcomes */}
             <div className="px-4 pb-4 flex flex-col gap-2.5">
               {data.identification.outcomes.map((o) => (
-                <div key={o.label} className="flex items-start gap-3 bg-[#F9FAF9] dark:bg-[#182419] rounded-lg p-3 border border-[#E0E6E2] dark:border-[#1E3028]">
+                <div key={o.label} className="flex items-start gap-3 bg-[#F5F8F6] dark:bg-[#172018] rounded-lg p-3 border border-[#D8E2DC] dark:border-[#1A2C22]">
                   <span className={`badge badge-${o.badge} shrink-0 mt-0.5`}>{o.label}</span>
-                  <span className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">{o.description}</span>
+                  <span className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">{o.description}</span>
                 </div>
               ))}
             </div>
 
             {/* Identification attributes */}
-            <div className="border-t border-[#E0E6E2] dark:border-[#1E3028]">
+            <div className="border-t border-[#D8E2DC] dark:border-[#1A2C22]">
               <div className="px-4 pt-3 pb-1 label-xs">Common identification attributes</div>
-              <div className="divide-y divide-[#EBF0EC] dark:divide-[#1E3028]">
+              <div className="divide-y divide-[#E6EDEA] dark:divide-[#1A2C22]">
                 {data.identification.ruleAttributes.map((a) => (
                   <div key={a.attribute} className="flex items-baseline gap-3 px-4 py-2 text-[13px]">
                     <span className="mono min-w-[180px] shrink-0">{a.attribute}</span>
-                    <span className="text-[12px] text-[#8EA898] dark:text-[#6A9880] leading-snug">{a.note}</span>
+                    <span className="text-[12px] text-[#506458] dark:text-[#4A6858] leading-snug">{a.note}</span>
                   </div>
                 ))}
               </div>
@@ -81,13 +81,13 @@ export default function IREPage() {
           {/* Reconciliation */}
           <div className="card">
             <div className="card-hdr">{data.reconciliation.title}</div>
-            <p className="px-4 pt-3 pb-3 text-[13px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">
+            <p className="px-4 pt-3 pb-3 text-[13px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">
               {data.reconciliation.description}
             </p>
 
-            <div className="border-t border-[#E0E6E2] dark:border-[#1E3028]">
+            <div className="border-t border-[#D8E2DC] dark:border-[#1A2C22]">
               <div className="px-4 pt-3 pb-1 label-xs">Default precedence order (highest → lowest)</div>
-              <div className="divide-y divide-[#EBF0EC] dark:divide-[#1E3028]">
+              <div className="divide-y divide-[#E6EDEA] dark:divide-[#1A2C22]">
                 {data.reconciliation.precedenceExamples.map((s) => (
                   <div key={s.source} className="flex items-start gap-3 px-4 py-2.5 text-[13px]">
                     <span className="w-5 h-5 rounded-full bg-[#E6F6ED] dark:bg-[rgba(23,192,104,0.12)] text-[#0C9248] dark:text-[#17C068] flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
@@ -95,7 +95,7 @@ export default function IREPage() {
                     </span>
                     <div>
                       <span className="font-medium text-[#131A15] dark:text-[#E0EAE4]">{s.source}</span>
-                      <span className="ml-2 text-[12px] text-[#8EA898] dark:text-[#6A9880]">{s.note}</span>
+                      <span className="ml-2 text-[12px] text-[#506458] dark:text-[#4A6858]">{s.note}</span>
                     </div>
                   </div>
                 ))}
@@ -132,7 +132,7 @@ export default function IREPage() {
                       <tr key={t.name}>
                         <td><span className="mono">{t.name}</span></td>
                         <td><span className={`badge ${roleCls}`}>{t.role}</span></td>
-                        <td className="text-[12px] text-[#8EA898] dark:text-[#6A9880]">{t.note}</td>
+                        <td className="text-[12px] text-[#506458] dark:text-[#4A6858]">{t.note}</td>
                       </tr>
                     )
                   })}
@@ -144,12 +144,12 @@ export default function IREPage() {
           {/* Tips */}
           <div className="card">
             <div className="card-hdr">Key tips</div>
-            <div className="divide-y divide-[#EBF0EC] dark:divide-[#1E3028]">
+            <div className="divide-y divide-[#E6EDEA] dark:divide-[#1A2C22]">
               {data.tips.map((tip) => (
                 <div key={tip.heading} className="px-4 py-3 flex gap-3">
                   <div className="flex-1">
                     <div className="text-[12.5px] font-semibold text-[#131A15] dark:text-[#E0EAE4] mb-0.5">{tip.heading}</div>
-                    <div className="text-[12.5px] text-[#8EA898] dark:text-[#6A9880] leading-relaxed">{tip.body}</div>
+                    <div className="text-[12.5px] text-[#506458] dark:text-[#4A6858] leading-relaxed">{tip.body}</div>
                   </div>
                 </div>
               ))}

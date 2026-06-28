@@ -52,7 +52,7 @@ export default function ClassifierDetail() {
   }, [id])
 
   if (loading) return (
-    <div className="page flex items-center justify-center text-[#8EA898] dark:text-[#6A9880] text-sm">
+    <div className="page flex items-center justify-center text-[#506458] dark:text-[#4A6858] text-sm">
       Loading classifier…
     </div>
   )
@@ -78,14 +78,14 @@ export default function ClassifierDetail() {
               )}
               {clf.type && <TypeBadge type={clf.type} />}
               {clf.matchCriteria && (
-                <span className="text-[10.5px] px-2 py-0.5 rounded-full border font-medium bg-white dark:bg-[#182419] text-[#2A3A30] dark:text-[#93B5A5] border-[#E0E6E2] dark:border-[#1E3028]">
+                <span className="text-[10.5px] px-2 py-0.5 rounded-full border font-medium bg-white dark:bg-[#172018] text-[#1E3028] dark:text-[#A8C4B8] border-[#D8E2DC] dark:border-[#1A2C22]">
                   match: <span className="font-semibold text-[#131A15] dark:text-[#E0EAE4]">{clf.matchCriteria}</span>
                 </span>
               )}
             </div>
             <h1 className="page-title text-xl">{clf.name}</h1>
             <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-              <span className="text-[12px] text-[#8EA898] dark:text-[#6A9880]">→</span>
+              <span className="text-[12px] text-[#506458] dark:text-[#4A6858]">→</span>
               <CiTableBadge table={clf.ciTable} label={clf.ciTableLabel} />
               {/* {(!clf.ciTableLabel || clf.ciTableLabel === clf.ciTable) && clf.ciTable && (
                 <span className="mono">{clf.ciTable}</span>
@@ -112,7 +112,7 @@ export default function ClassifierDetail() {
                 'px-4 py-2 text-[13px] font-medium border-b-2 transition-colors duration-100 cursor-pointer',
                 tab === t
                   ? 'border-[#0C9248] dark:border-[#17C068] text-[#0C9248] dark:text-[#17C068]'
-                  : 'border-transparent text-[#8EA898] dark:text-[#6A9880] hover:text-[#131A15] dark:hover:text-[#E0EAE4]',
+                  : 'border-transparent text-[#506458] dark:text-[#4A6858] hover:text-[#131A15] dark:hover:text-[#E0EAE4]',
               ].join(' ')}
               style={{ fontFamily: 'inherit' }}
             >
@@ -149,7 +149,7 @@ function CriteriaTab({ criteria, classifierType }) {
     return (
       <div className="card">
         <div className="card-hdr">Classification Criteria</div>
-        <div className="px-4 py-6 text-[12px] text-[#8EA898] dark:text-[#6A9880] text-center">
+        <div className="px-4 py-6 text-[12px] text-[#506458] dark:text-[#4A6858] text-center">
           No criteria defined for this classifier.
         </div>
       </div>
@@ -196,7 +196,7 @@ function CriteriaTab({ criteria, classifierType }) {
                     ? <span className="font-mono text-[11.5px] text-[#131A15] dark:text-[#B8CEC4] break-all">{c.value}</span>
                     : <span className="text-[#D4D1CA] dark:text-[#363A52]">—</span>}
                 </td>
-                <td className="text-right text-[#8EA898] dark:text-[#6A9880] tabular-nums">
+                <td className="text-right text-[#506458] dark:text-[#4A6858] tabular-nums">
                   {c.order ?? '—'}
                 </td>
               </tr>
@@ -227,7 +227,7 @@ function ScriptTab({ script }) {
         {script && (
           <button
             onClick={handleCopy}
-            className="ml-auto text-[11px] px-2 py-0.5 rounded border border-[#E0E6E2] dark:border-[#1E3028] text-[#8EA898] dark:text-[#6A9880] hover:bg-[#EBF0EC] dark:hover:bg-white/5 transition-colors cursor-pointer"
+            className="ml-auto text-[11px] px-2 py-0.5 rounded border border-[#D8E2DC] dark:border-[#1A2C22] text-[#506458] dark:text-[#4A6858] hover:bg-[#E4EDEA] dark:hover:bg-white/5 transition-colors cursor-pointer"
             style={{ fontFamily: 'inherit' }}
           >
             {copied ? 'Copied!' : 'Copy'}
@@ -239,7 +239,7 @@ function ScriptTab({ script }) {
           <pre className="code-pre">{script}</pre>
         </div>
       ) : (
-        <div className="px-4 py-6 text-[12px] text-[#8EA898] dark:text-[#6A9880] text-center">
+        <div className="px-4 py-6 text-[12px] text-[#506458] dark:text-[#4A6858] text-center">
           No script defined for this classifier.
         </div>
       )}

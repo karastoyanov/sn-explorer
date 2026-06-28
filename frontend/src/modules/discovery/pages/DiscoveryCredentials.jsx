@@ -27,7 +27,7 @@ export default function DiscoveryCredentials() {
         </div>
         <div className="page-body">
           <div className="page-inner">
-            <div className="text-[13px] text-[#8EA898] dark:text-[#6A9880]">Loading…</div>
+            <div className="text-[13px] text-[#506458] dark:text-[#4A6858]">Loading…</div>
           </div>
         </div>
       </div>
@@ -73,15 +73,15 @@ function OverviewStrip({ overview }) {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
       <div className="card p-4">
         <div className="label-xs mb-1.5">How It Works</div>
-        <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">{overview.flow}</p>
+        <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">{overview.flow}</p>
       </div>
 
       <div className="card p-4">
         <div className="label-xs mb-1.5">Credential Affinity</div>
-        <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">{overview.credentialAffinity}</p>
+        <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">{overview.credentialAffinity}</p>
         <div className="mt-2">
           <span className="label-xs">Storage table: </span>
-          <span className="mono text-[11px] text-[#2A3A30] dark:text-[#93B5A5]">{overview.storageTable}</span>
+          <span className="mono text-[11px] text-[#1E3028] dark:text-[#A8C4B8]">{overview.storageTable}</span>
         </div>
       </div>
 
@@ -89,8 +89,8 @@ function OverviewStrip({ overview }) {
         <div className="label-xs mb-2">Best Practices</div>
         <ul className="space-y-1.5">
           {overview.notes.map((n, i) => (
-            <li key={i} className="flex items-start gap-1.5 text-[12px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">
-              <span className="text-[#8EA898] dark:text-[#5EDC9A] shrink-0 mt-0.5">•</span>
+            <li key={i} className="flex items-start gap-1.5 text-[12px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">
+              <span className="text-[#506458] dark:text-[#5EDC9A] shrink-0 mt-0.5">•</span>
               {n}
             </li>
           ))}
@@ -109,7 +109,7 @@ function TypeCard({ ct, isActive, onClick }) {
         bg-white dark:bg-[#141E18]
         ${isActive
           ? ''
-          : 'border border-[#E0E6E2] dark:border-[#1E3028] hover:border-[#9DDCBA] dark:hover:border-[rgba(23,192,104,0.3)] hover:shadow-sm'
+          : 'border border-[#D8E2DC] dark:border-[#1A2C22] hover:border-[#9DDCBA] dark:hover:border-[rgba(23,192,104,0.3)] hover:shadow-sm'
         }`}
       style={isActive ? { boxShadow: `0 0 0 2px ${color}` } : {}}
     >
@@ -126,7 +126,7 @@ function CredentialDetail({ ct }) {
     <div className="card">
       {/* Header */}
       <div
-        className="flex items-start gap-3 px-5 py-4 border-b border-[#E0E6E2] dark:border-[#1E3028]"
+        className="flex items-start gap-3 px-5 py-4 border-b border-[#D8E2DC] dark:border-[#1A2C22]"
         style={{ background: `${color}12` }}
       >
         <div className="flex-1 min-w-0">
@@ -137,15 +137,15 @@ function CredentialDetail({ ct }) {
               <span key={p} className="badge badge-slate">{p}</span>
             ))}
             {ct.ports.map((p) => (
-              <span key={p} className="mono text-[11px] text-[#8EA898] dark:text-[#6A9880]">:{p}</span>
+              <span key={p} className="mono text-[11px] text-[#506458] dark:text-[#4A6858]">:{p}</span>
             ))}
           </div>
-          <p className="text-[12.5px] text-[#2A3A30] dark:text-[#93B5A5] leading-relaxed">{ct.description}</p>
+          <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">{ct.description}</p>
         </div>
       </div>
 
       {/* Two-column body */}
-      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#EBF0EC] dark:divide-[#1E3028]">
+      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#E6EDEA] dark:divide-[#1A2C22]">
 
         {/* Fields table */}
         <div className="p-5">
@@ -170,7 +170,7 @@ function CredentialDetail({ ct }) {
                       : <span className="badge badge-gray">No</span>
                     }
                   </td>
-                  <td className="text-[11.5px] text-[#8EA898] dark:text-[#6A9880] align-top">
+                  <td className="text-[11.5px] text-[#506458] dark:text-[#4A6858] align-top">
                     {f.description}
                   </td>
                 </tr>
@@ -197,7 +197,7 @@ function CredentialDetail({ ct }) {
             <div className="label-xs mb-2">CI Table Types</div>
             <div className="flex flex-col gap-0.5">
               {ct.ciTypes.map((c) => (
-                <span key={c} className="mono text-[11px] text-[#2A3A30] dark:text-[#93B5A5]">{c}</span>
+                <span key={c} className="mono text-[11px] text-[#1E3028] dark:text-[#A8C4B8]">{c}</span>
               ))}
             </div>
           </div>
@@ -207,8 +207,8 @@ function CredentialDetail({ ct }) {
             <div className="label-xs mb-2">Required Permissions</div>
             <ul className="space-y-1">
               {ct.requiredPermissions.map((p, i) => (
-                <li key={i} className="flex items-start gap-1.5 text-[12px] text-[#2A3A30] dark:text-[#93B5A5]">
-                  <span className="text-[#8EA898] dark:text-[#5EDC9A] shrink-0 mt-0.5">•</span>
+                <li key={i} className="flex items-start gap-1.5 text-[12px] text-[#1E3028] dark:text-[#A8C4B8]">
+                  <span className="text-[#506458] dark:text-[#5EDC9A] shrink-0 mt-0.5">•</span>
                   {p}
                 </li>
               ))}
@@ -221,8 +221,8 @@ function CredentialDetail({ ct }) {
               <div className="label-xs mb-2">Notes</div>
               <ul className="space-y-1">
                 {ct.notes.map((n, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-[12px] text-[#2A3A30] dark:text-[#93B5A5]">
-                    <span className="text-[#8EA898] dark:text-[#5EDC9A] shrink-0 mt-0.5">→</span>
+                  <li key={i} className="flex items-start gap-1.5 text-[12px] text-[#1E3028] dark:text-[#A8C4B8]">
+                    <span className="text-[#506458] dark:text-[#5EDC9A] shrink-0 mt-0.5">→</span>
                     {n}
                   </li>
                 ))}

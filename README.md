@@ -1,6 +1,6 @@
 # SN Discovery Explorer
 
-A local web application for exploring and querying ServiceNow Discovery configuration — patterns, classifiers, stages, the IRE (Identification & Reconciliation Engine), Discovery Credentials, and the MID Server. Includes an AI assistant that answers questions grounded exclusively in data synced from your own ServiceNow instance.
+A local web application for exploring and querying ServiceNow Discovery configuration — patterns, classifiers, stages, the IRE (Identification & Reconciliation Engine), Discovery Credentials, the MID Server, and CMDB class configuration. Includes an AI assistant that answers questions grounded exclusively in data synced from your own ServiceNow instance.
 
 ---
 
@@ -13,12 +13,14 @@ A local web application for exploring and querying ServiceNow Discovery configur
    - [Prerequisites](#prerequisites)
    - [Extract Patterns](#extract-patterns)
    - [Extract Classifiers](#extract-classifiers)
+   - [Extract CMDB Classes](#extract-cmdb-classes)
    - [Credentials via Environment Variables](#credentials-via-environment-variables)
    - [Sync Options Reference](#sync-options-reference)
 5. [Discovery Credentials](#discovery-credentials)
 6. [MID Server](#mid-server)
-7. [AI Assistant](#ai-assistant)
-8. [Environment Variables](#environment-variables)
+7. [CMDB Explorer](#cmdb-explorer)
+8. [AI Assistant](#ai-assistant)
+9. [Environment Variables](#environment-variables)
 
 ---
 
@@ -42,33 +44,39 @@ SN_Discovery_Explorer/
 │   ├── app.py                        # Flask app entry point
 │   ├── requirements.txt
 │   ├── modules/
-│   │   └── discovery/
-│   │       ├── chat.py               # RAG retrieval pipeline
-│   │       ├── routes.py             # REST API endpoints
-│   │       └── data/                 # Bundled reference docs
-│   │           ├── stages.json
-│   │           ├── ire.json
-│   │           ├── credentials.json  # Discovery credential types reference
-│   │           └── mid_server.json   # MID Server reference
+│   │   ├── discovery/
+│   │   │   ├── chat.py               # RAG retrieval pipeline
+│   │   │   ├── routes.py             # REST API endpoints
+│   │   │   └── data/                 # Bundled reference docs
+│   │   │       ├── stages.json
+│   │   │       ├── ire.json
+│   │   │       ├── credentials.json  # Discovery credential types reference
+│   │   │       └── mid_server.json   # MID Server reference
+│   │   └── cmdb/
+│   │       └── routes.py             # CMDB Explorer API endpoints
 │   └── scripts/
 │       ├── extract_patterns.py       # Sync patterns from ServiceNow
 │       ├── extract_classifiers.py    # Sync classifiers from ServiceNow
+│       ├── extract_cmdb_classes.py   # Sync CMDB classes, identifiers, relation types & recon defs
 │       └── data/                     # Output directory for synced JSON files
 │           ├── patterns_all.json
-│           └── classifiers_all.json
+│           ├── classifiers_all.json
+│           └── cmdb_classes.json
 ├── frontend/
 │   └── src/
 │       ├── api/client.js
 │       ├── components/ChatPanel.jsx
-│       └── modules/discovery/pages/
-│           ├── PatternsList.jsx
-│           ├── PatternDetail.jsx
-│           ├── ClassifiersList.jsx
-│           ├── ClassifierDetail.jsx
-│           ├── DiscoveryStages.jsx
-│           ├── IREPage.jsx
-│           ├── DiscoveryCredentials.jsx  # Credential types browser
-│           └── MIDServerPage.jsx         # MID Server reference
+│       ├── modules/discovery/pages/
+│       │   ├── PatternsList.jsx
+│       │   ├── PatternDetail.jsx
+│       │   ├── ClassifiersList.jsx
+│       │   ├── ClassifierDetail.jsx
+│       │   ├── DiscoveryStages.jsx
+│       │   ├── IREPage.jsx
+│       │   ├── DiscoveryCredentials.jsx  # Credential types browser
+│       │   └── MIDServerPage.jsx         # MID Server reference
+│       └── modules/cmdb/pages/
+│           └── CMDBClassManager.jsx      # CMDB Explorer (4 sub-tabs)
 ├── docs/
 │   └── rag_implementation.md         # Full RAG pipeline documentation
 ├── .env.example
@@ -104,8 +112,10 @@ npm run dev                     # runs on http://localhost:5173
 The AI assistant and the pattern/classifier browser are only as useful as the data behind them. The two scripts below connect to your ServiceNow instance via its REST API and pull all Discovery patterns and classifiers into local JSON files that the application reads at startup.
 
 > **Note:** You need a ServiceNow user with read access to the following tables:
-> `sa_pattern`, `sa_ci_to_pattern`, `sa_pattern_extension`, `sn_pattern_trigger_rule`,
-> `discovery_classy`, `discovery_class_criteria`
+>
+> *Patterns & Classifiers:* `sa_pattern`, `sa_ci_to_pattern`, `sa_pattern_extension`, `sn_pattern_trigger_rule`, `discovery_classy`, `discovery_class_criteria`
+>
+> *CMDB Explorer:* `sys_db_object`, `sys_dictionary`, `cmdb_class_info`, `cmdb_identifier`, `cmdb_identifier_entry`, `cmdb_rel_type`, `cmdb_reconciliation_definition`
 
 ### Prerequisites
 
@@ -197,6 +207,45 @@ Output is written to `backend/scripts/data/classifiers_all.json` by default.
 
 ---
 
+### Extract CMDB Classes
+
+Pulls CI class definitions, IRE identification rules, CMDB relation types, and reconciliation definitions into a single JSON file. The CMDB Explorer tab is only populated after this script has been run.
+
+**Basic usage (password prompted):**
+```bash
+python scripts/extract_cmdb_classes.py \
+    --url  https://<instance>.service-now.com \
+    --user <username>
+```
+
+**With password inline:**
+```bash
+python scripts/extract_cmdb_classes.py \
+    --url      https://dev12345.service-now.com \
+    --user     admin \
+    --password yourpassword
+```
+
+**Skip field definitions (faster, fieldCount will be 0):**
+```bash
+python scripts/extract_cmdb_classes.py \
+    --url      https://dev12345.service-now.com \
+    --user     admin \
+    --no-fields
+```
+
+**Custom output path:**
+```bash
+python scripts/extract_cmdb_classes.py \
+    --url    https://dev12345.service-now.com \
+    --user   admin \
+    --output /path/to/my/cmdb_classes.json
+```
+
+Output is written to `backend/scripts/data/cmdb_classes.json` by default.
+
+---
+
 ### Credentials via Environment Variables
 
 To avoid typing credentials on every run, copy `.env.example` to `.env` and fill in your values:
@@ -249,6 +298,17 @@ SNOW_PASSWORD=yourpassword python scripts/extract_patterns.py \
 | `--user` | Yes | — | ServiceNow username |
 | `--password` | No | prompted | Password |
 | `--output` | No | `scripts/data/classifiers_all.json` | Output file path |
+| `--debug` | No | false | Debug logging |
+
+#### `extract_cmdb_classes.py`
+
+| Flag | Required | Default | Description |
+|---|---|---|---|
+| `--url` | Yes | — | ServiceNow instance URL (`https://dev12345.service-now.com`) |
+| `--user` | Yes | — | ServiceNow username |
+| `--password` | No | prompted / `$SNOW_PASSWORD` | Password |
+| `--output` | No | `scripts/data/cmdb_classes.json` | Output file path |
+| `--no-fields` | No | false | Skip `sys_dictionary` fetch — faster but `fieldCount` will be 0 for all classes |
 | `--debug` | No | false | Debug logging |
 
 ---
@@ -308,17 +368,36 @@ The AI assistant also indexes MID Server reference data, so questions like *"How
 
 ---
 
+## CMDB Explorer
+
+The **CMDB Explorer** page gives you a searchable view of the CMDB metadata pulled from your ServiceNow instance. It requires running `extract_cmdb_classes.py` first — until then the page shows an empty state with a prompt to sync.
+
+The page is organised into four tabs:
+
+| Tab | Source table(s) | What it shows |
+|---|---|---|
+| **CI Classes** | `sys_db_object`, `sys_dictionary`, `cmdb_class_info` | Every `cmdb_ci_*` table: name, label, parent class, scope, field count, and flags (Principal, IRE-linked, Extendable) |
+| **Identifiers** | `cmdb_identifier`, `cmdb_identifier_entry` | IRE identification rules with expandable entries showing criterion attributes, main attributes, priority order, and flags (Fallback, Null OK, Exact count) |
+| **Relation Types** | `cmdb_rel_type` | The full relation type catalog with parent-to-child and child-to-parent descriptors |
+| **Reconciliation** | `cmdb_reconciliation_definition` | Reconciliation rules per data source and CI class — attributes governed, null-update fields, priority, and active status |
+
+Each tab has a live search bar that filters across the most relevant fields (name, label, `appliesTo`, data source, descriptors).
+
+The AI assistant also indexes all four CMDB entity types, so questions like *"What identification rules apply to `cmdb_ci_linux_server`?"*, *"What relation types exist for network devices?"*, or *"Which reconciliation definitions have the highest priority?"* are answered directly from your synced data.
+
+---
+
 ## AI Assistant
 
 The chat panel in the top-right corner provides a conversational interface over your synced data. It uses a local RAG (Retrieval-Augmented Generation) pipeline:
 
-1. Your question is sent to the Flask backend, which retrieves the most relevant content using hybrid BM25 + semantic search across patterns, classifiers, credential types, and MID Server reference sections.
+1. Your question is sent to the Flask backend, which retrieves the most relevant content using hybrid BM25 + semantic search across patterns, classifiers, credential types, MID Server reference sections, and CMDB class data.
 2. The retrieved context is injected into the system prompt.
 3. The enriched prompt is sent to OpenAI directly from your browser using your own API key — the key is stored only in `sessionStorage` and never leaves the browser.
 
 The assistant answers exclusively from your synced and bundled data and will tell you explicitly when information is not available rather than guessing. See [`docs/rag_implementation.md`](docs/rag_implementation.md) for full pipeline documentation.
 
-**To use the assistant:** open the chat panel, enter your OpenAI API key when prompted, and start asking questions about your patterns, classifiers, stages, IRE configuration, credential types, or MID Server.
+**To use the assistant:** open the chat panel, enter your OpenAI API key when prompted, and start asking questions about your patterns, classifiers, stages, IRE configuration, credential types, MID Server, or CMDB classes.
 
 ---
 
