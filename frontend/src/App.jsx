@@ -12,6 +12,7 @@ import ClassifiersList from './modules/discovery/pages/ClassifiersList'
 import DiscoveryCredentials from './modules/discovery/pages/DiscoveryCredentials'
 import MIDServerPage from './modules/discovery/pages/MIDServerPage'
 import IREPage from './modules/discovery/pages/IREPage'
+import DiscoveryRunsPage from './modules/discovery/pages/DiscoveryRunsPage'
 import CMDBClassManager from './modules/cmdb/pages/CMDBClassManager'
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
               <Route path="/discovery/classifiers/:id" element={<ClassifierDetail />} />
               <Route path="/discovery/stages" element={<DiscoveryStages />} />
               <Route path="/discovery/credentials" element={<DiscoveryCredentials />} />
+              <Route path="/discovery/runs" element={<DiscoveryRunsPage />} />
               <Route path="/discovery/mid-server" element={<MIDServerPage />} />
 
               {/* CMDB Explorer */}

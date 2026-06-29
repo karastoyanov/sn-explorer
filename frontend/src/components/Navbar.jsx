@@ -14,6 +14,7 @@ const NAV_GROUPS = [
       { to: '/discovery/stages',      label: 'Discovery Stages' },
       { to: '/discovery/credentials', label: 'Credentials' },
       { to: '/discovery/mid-server',  label: 'MID Server' },
+      { to: '/discovery/runs',        label: 'Discovery Logs' },
     ],
   },
   {

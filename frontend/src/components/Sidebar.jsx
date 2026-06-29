@@ -48,6 +48,15 @@ function IconIRE() {
   )
 }
 
+function IconLogs() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <path d="M5 6h6M5 9h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
 function IconSearch() {
   return (
     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -127,6 +136,13 @@ export default function Sidebar({ onChatOpen }) {
         >
           <span className="sbar-nav-icon"><IconIRE /></span>
           IRE &amp; Reconciliation
+        </NavLink>
+        <NavLink
+          to="/discovery/runs"
+          className={({ isActive }) => `sbar-nav ${isActive ? 'active' : ''}`}
+        >
+          <span className="sbar-nav-icon"><IconLogs /></span>
+          Discovery Logs
         </NavLink>
       </div>
 

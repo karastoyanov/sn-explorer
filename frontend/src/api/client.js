@@ -25,6 +25,7 @@ export const discoveryApi = {
   getClassifier: (id) => get(`/discovery/classifiers/${id}`),
   getCredentials: () => get('/discovery/credentials'),
   getMidServer:   () => get('/discovery/mid-server'),
+  getRuns:        () => get('/discovery/runs'),
 }
 
 export const cmdbApi = {
