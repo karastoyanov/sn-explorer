@@ -37,35 +37,97 @@ const MID_STATUS_DOT = {
 
 /* ── CI table → human label ───────────────────────────────────────────────── */
 const CI_TABLE_LABEL = {
-  cmdb_ci_linux_server:     'Linux Server',
-  cmdb_ci_win_server:       'Windows Server',
-  cmdb_ci_solaris_server:   'Solaris Server',
-  cmdb_ci_app_server_tomcat:'Tomcat',
-  cmdb_ci_app_server_jboss: 'JBoss',
-  cmdb_ci_web_server_apache:'Apache',
-  cmdb_ci_web_server_iis:   'IIS',
-  cmdb_ci_computer:         'Computer',
-  cmdb_ci_network_adapter:  'Network Adapter',
-  cmdb_ci_ip_address:       'IP Address',
-  cmdb_ci_db_ora:           'Oracle DB',
-  cmdb_ci_db_mssql:         'MSSQL DB',
-  cmdb_ci_db_mysql:         'MySQL DB',
+  // Servers
+  cmdb_ci_linux_server:              'Linux Server',
+  cmdb_ci_win_server:                'Windows Server',
+  cmdb_ci_solaris_server:            'Solaris Server',
+  cmdb_ci_computer:                  'Computer',
+  // App servers
+  cmdb_ci_app_server_tomcat:         'Tomcat',
+  cmdb_ci_tomcat_connector:          'Tomcat Connector',
+  cmdb_ci_app_server_jboss:          'JBoss',
+  // Web servers
+  cmdb_ci_apache_web_server:         'Apache',
+  cmdb_ci_nginx_web_server:          'NGINX',
+  cmdb_ci_web_server_iis:            'IIS',
+  // Databases
+  cmdb_ci_db_ora:                    'Oracle DB',
+  cmdb_ci_db_mssql:                  'MSSQL',
+  cmdb_ci_db_mysql_instance:         'MySQL',
+  cmdb_ci_db_mongodb_instance:       'MongoDB',
+  cmdb_ci_db_postgresql:             'PostgreSQL',
+  cmdb_ci_db_instance:               'DB Instance',
+  // Docker / containers
+  cmdb_ci_docker_engine:             'Docker Engine',
+  cmdb_ci_docker_container:          'Docker Container',
+  cmdb_ci_docker_image:              'Docker Image',
+  cmdb_ci_container_repository:      'Container Registry',
+  cmdb_ci_container_repository_entry:'Container Image',
+  // Network
+  cmdb_ci_network_adapter:           'Network Adapter',
+  cmdb_ci_ip_address:                'IP Address',
+  cmdb_ci_dns_name:                  'DNS Name',
+  dscy_router_interface:             'Router Interface',
+  // Storage / filesystem
+  cmdb_ci_disk_partition:            'Disk Partition',
+  cmdb_ci_file_system:               'File System',
+  // Other
+  cmdb_ci_config_file_tracked:       'Config File',
+  cmdb_ci_printer:                   'Printer',
 }
 
 const CI_TABLE_COLOR = {
-  cmdb_ci_linux_server:      '#34D399',
-  cmdb_ci_win_server:        '#60A5FA',
-  cmdb_ci_solaris_server:    '#A78BFA',
-  cmdb_ci_app_server_tomcat: '#FB923C',
-  cmdb_ci_app_server_jboss:  '#F472B6',
-  cmdb_ci_web_server_apache: '#FCD34D',
-  cmdb_ci_web_server_iis:    '#93C5FD',
-  cmdb_ci_computer:          '#6EE7B7',
-  cmdb_ci_network_adapter:   '#94A3B8',
-  cmdb_ci_ip_address:        '#CBD5E1',
-  cmdb_ci_db_ora:            '#F87171',
-  cmdb_ci_db_mssql:          '#7DD3FC',
-  cmdb_ci_db_mysql:          '#86EFAC',
+  // Servers
+  cmdb_ci_linux_server:              '#34D399',
+  cmdb_ci_win_server:                '#60A5FA',
+  cmdb_ci_solaris_server:            '#A78BFA',
+  cmdb_ci_computer:                  '#6EE7B7',
+  // App servers
+  cmdb_ci_app_server_tomcat:         '#F97316',
+  cmdb_ci_tomcat_connector:          '#FB923C',
+  cmdb_ci_app_server_jboss:          '#F472B6',
+  // Web servers
+  cmdb_ci_apache_web_server:         '#FBBF24',
+  cmdb_ci_nginx_web_server:          '#22C55E',
+  cmdb_ci_web_server_iis:            '#93C5FD',
+  // Databases
+  cmdb_ci_db_ora:                    '#F87171',
+  cmdb_ci_db_mssql:                  '#7DD3FC',
+  cmdb_ci_db_mysql_instance:         '#4ADE80',
+  cmdb_ci_db_mongodb_instance:       '#86EFAC',
+  cmdb_ci_db_postgresql:             '#38BDF8',
+  cmdb_ci_db_instance:               '#FCA5A5',
+  // Docker / containers
+  cmdb_ci_docker_engine:             '#0EA5E9',
+  cmdb_ci_docker_container:          '#38BDF8',
+  cmdb_ci_docker_image:              '#2DD4BF',
+  cmdb_ci_container_repository:      '#06B6D4',
+  cmdb_ci_container_repository_entry:'#67E8F9',
+  // Network
+  cmdb_ci_network_adapter:           '#818CF8',
+  cmdb_ci_ip_address:                '#A5B4FC',
+  cmdb_ci_dns_name:                  '#C4B5FD',
+  dscy_router_interface:             '#D97706',
+  // Storage / filesystem
+  cmdb_ci_disk_partition:            '#EA580C',
+  cmdb_ci_file_system:               '#C2410C',
+  // Other
+  cmdb_ci_config_file_tracked:       '#D8B4FE',
+  cmdb_ci_printer:                   '#F9A8D4',
+}
+
+function ciTableLabel(table) {
+  if (!table) return 'Unknown'
+  if (CI_TABLE_LABEL[table]) return CI_TABLE_LABEL[table]
+  return table
+    .replace(/^cmdb_ci_/, '')
+    .replace(/^dscy_/, '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase())
+}
+
+function ciTableColor(table) {
+  return CI_TABLE_COLOR[table] || '#94A3B8'
 }
 
 /* ── Field label prettifier ───────────────────────────────────────────────── */
@@ -227,8 +289,8 @@ function RunSummaryCard({ data }) {
 
 function CICard({ ci }) {
   const [expanded, setExpanded] = useState(false)
-  const tableLabel = CI_TABLE_LABEL[ci.ciTable] || ci.ciTable
-  const dotColor   = CI_TABLE_COLOR[ci.ciTable] || '#94A3B8'
+  const tableLabel = ciTableLabel(ci.ciTable)
+  const dotColor   = ciTableColor(ci.ciTable)
   const stateBadge = CI_STATE_BADGE[ci.state] || 'badge-slate'
   const details    = ci.classDetails || {}
   const relations  = ci.relations || []
@@ -561,7 +623,7 @@ export default function DiscoveryRunsPage() {
                 </button>
                 {Object.entries(byTable).map(([table, items]) => {
                   const isActive = tableFilter === table
-                  const color    = CI_TABLE_COLOR[table] || '#94A3B8'
+                  const color    = ciTableColor(table)
                   return (
                     <button
                       key={table}
@@ -577,7 +639,7 @@ export default function DiscoveryRunsPage() {
                         className="w-1.5 h-1.5 rounded-full shrink-0"
                         style={{ background: isActive ? 'rgba(0,0,0,0.35)' : color }}
                       />
-                      {CI_TABLE_LABEL[table] || table} ({items.length})
+                      {ciTableLabel(table)} ({items.length})
                     </button>
                   )
                 })}

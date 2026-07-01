@@ -107,6 +107,14 @@ _DISCO_RUN_KWORDS = frozenset({
     'ram', 'memory', 'cpu', 'processor', 'cores', 'disk', 'storage',
     'kernel', 'hardware', 'spec', 'specs', 'fqdn',
     'version', 'operating', 'system',
+    # App / middleware
+    'nginx', 'apache', 'tomcat', 'jboss', 'mysql', 'mongo', 'mongodb',
+    'database', 'postgres', 'postgresql', 'oracle',
+    # Containers / Docker
+    'docker', 'container', 'image', 'registry', 'infra',
+    # Generic discovery Q&A terms
+    'running', 'installed', 'deployed', 'what', 'which', 'how', 'many',
+    'list', 'show', 'any', 'printer', 'dns',
 })
 # Populated at load time: tokens from every discovered CI name/FQDN.
 # Lets queries mentioning a specific CI name ("webservices-infra") trigger the discovery block
@@ -341,8 +349,18 @@ def _flatten_disco_runs(data: dict) -> list[dict]:
     schedule = data.get("schedule",  {})
     mid      = data.get("midServer", {})
 
-    # Summary document
-    ranges      = " ".join(r.get("range", "") for r in schedule.get("ipRanges", []))
+    # Summary document — includes CI-type breakdown so queries like
+    # "what was discovered?" or "any mongodb?" hit this doc via BM25
+    ranges = " ".join(r.get("range", "") for r in schedule.get("ipRanges", []))
+    cis_all = run.get("discoveredCIs", [])
+    type_counts: dict[str, int] = {}
+    for ci in cis_all:
+        t = ci.get("ciTable", "cmdb_ci")
+        type_counts[t] = type_counts.get(t, 0) + 1
+    type_breakdown = " ".join(
+        f"{t.replace('cmdb_ci_', '').replace('dscy_', '').replace('_', ' ')} {n}"
+        for t, n in type_counts.items()
+    )
     summary_body = " ".join(filter(None, [
         f"Discovery Run {run.get('number', '')}",
         f"schedule {schedule.get('name', '')}",
@@ -351,14 +369,17 @@ def _flatten_disco_runs(data: dict) -> list[dict]:
         f"version {mid.get('version', '')}",
         f"progress {run.get('progress', '')}",
         f"IP ranges {ranges}",
+        f"discovered CI types {type_breakdown}",
+        f"total {len(cis_all)} CIs",
     ]))
     docs.append({
-        "docType": "run_summary",
-        "title":   f"Discovery Run {run.get('number', '')} — {run.get('state', '')}",
-        "body":    summary_body,
-        "_run":    run,
-        "_schedule": schedule,
-        "_mid":    mid,
+        "docType":    "run_summary",
+        "title":      f"Discovery Run {run.get('number', '')} — {run.get('state', '')}",
+        "body":       summary_body,
+        "_run":       run,
+        "_schedule":  schedule,
+        "_mid":       mid,
+        "_type_counts": type_counts,
     })
 
     # One document per discovered CI
@@ -401,19 +422,26 @@ def _run_doc_text(doc: dict) -> str:
 
 def _prose_run_doc(doc: dict) -> str:
     if doc["docType"] == "run_summary":
-        run      = doc["_run"]
-        schedule = doc["_schedule"]
-        mid      = doc["_mid"]
-        ranges   = ", ".join(r.get("range", "") for r in schedule.get("ipRanges", []))
-        cis      = run.get("discoveredCIs", [])
-        ci_count = len(cis)
-        return (
+        run          = doc["_run"]
+        schedule     = doc["_schedule"]
+        mid          = doc["_mid"]
+        type_counts  = doc.get("_type_counts", {})
+        ranges       = ", ".join(r.get("range", "") for r in schedule.get("ipRanges", []))
+        ci_count     = len(run.get("discoveredCIs", []))
+        header = (
             f"**Discovery Run {run.get('number', '?')}** — State: {run.get('state', '?')} | "
             f"Progress: {run.get('progress', '?')}% | "
-            f"CIs discovered: {ci_count} | "
+            f"Total CIs: {ci_count} | "
             f"Schedule: {schedule.get('name', '?')} | IP Ranges: {ranges} | "
             f"MID Server: {mid.get('name', '?')} ({mid.get('status', '?')}, v{mid.get('version', '?')})"
         )
+        if type_counts:
+            breakdown = ", ".join(
+                f"{t.replace('cmdb_ci_', '').replace('dscy_', '').replace('_', ' ').title()}: {n}"
+                for t, n in sorted(type_counts.items(), key=lambda x: -x[1])
+            )
+            header += f"\n  CI Types: {breakdown}"
+        return header
 
     ci    = doc["_ci"]
     table = ci.get("ciTable", "cmdb_ci")
@@ -1090,14 +1118,15 @@ def _build_context(messages: list[dict]) -> str:
     if (query_toks & _DISCO_RUN_KWORDS or query_toks & _disco_run_ci_toks) and _disco_run_docs:
         hits = _search_disco_runs(query)
         if hits:
-            # Always ensure the run summary is first
-            summary_docs = [d for d in hits if d["docType"] == "run_summary"]
-            ci_docs      = [d for d in hits if d["docType"] == "discovered_ci"]
-            ordered      = summary_docs + ci_docs
+            # Always prepend the summary doc (full CI-type breakdown) even if it
+            # didn't rank in the top-N, then append matched CI docs
+            summary_doc  = next((d for d in _disco_run_docs if d["docType"] == "run_summary"), None)
+            ci_hits      = [d for d in hits if d["docType"] == "discovered_ci"]
+            ordered      = ([summary_doc] if summary_doc else []) + ci_hits
             body = "\n".join(_prose_run_doc(d) for d in ordered)
             run_num = (_disco_run_raw or {}).get("latestRun", {}).get("number", "?")
             parts.append(
-                f"## Latest Discovery Run ({run_num}) — {len(ci_docs)} CI(s) matched\n{body}"
+                f"## Latest Discovery Run ({run_num}) — {len(ci_hits)} CI(s) matched\n{body}"
             )
 
     return "\n\n".join(parts)
