@@ -25,6 +25,10 @@ _cmdb_idents:   list | None = None
 _cmdb_rel_types: list | None = None
 _cmdb_recon:    list | None = None
 
+# Discovery Runs (loaded from scripts/data/discovery_runs.json)
+_disco_run_docs: list | None = None   # flattened docs: one per CI + run summary
+_disco_run_raw:  dict | None = None   # full data for summary injection
+
 # BM25 indices (populated at load time, requires rank-bm25)
 _pat_bm25   = None
 _clf_bm25   = None
@@ -34,6 +38,7 @@ _cmdb_cls_bm25   = None
 _cmdb_ident_bm25 = None
 _cmdb_rel_bm25   = None
 _cmdb_recon_bm25 = None
+_disco_run_bm25  = None
 
 # Semantic search (populated at load time, requires sentence-transformers)
 _sem_model        = None
@@ -45,6 +50,7 @@ _cmdb_cls_embeddings   = None
 _cmdb_ident_embeddings = None
 _cmdb_rel_embeddings   = None
 _cmdb_recon_embeddings = None
+_disco_run_embeddings  = None
 
 # Keywords that trigger inclusion of static reference sections
 _STAGE_KWORDS = frozenset({
@@ -88,6 +94,32 @@ _CMDB_RECON_KWORDS = frozenset({
     'null_update', 'priority', 'reconcile', 'override', 'conflict',
     'source', 'authoritative',
 })
+_DISCO_RUN_KWORDS = frozenset({
+    'discovered', 'find', 'found', 'inventoried', 'inventory',
+    'latest', 'recent', 'last', 'scan', 'scanned',
+    'dis', 'onprem', 'virtualbox', 'schedule',
+    'linux', 'tomcat', 'server', 'host', 'hostname',
+    'vm', 'virtual',
+    'ip', 'address', 'range', 'subnet',
+    'created', 'updated',
+    'network',
+    # Hardware / CI-attribute query terms
+    'ram', 'memory', 'cpu', 'processor', 'cores', 'disk', 'storage',
+    'kernel', 'hardware', 'spec', 'specs', 'fqdn',
+    'version', 'operating', 'system',
+    # App / middleware
+    'nginx', 'apache', 'tomcat', 'jboss', 'mysql', 'mongo', 'mongodb',
+    'database', 'postgres', 'postgresql', 'oracle',
+    # Containers / Docker
+    'docker', 'container', 'image', 'registry', 'infra',
+    # Generic discovery Q&A terms
+    'running', 'installed', 'deployed', 'what', 'which', 'how', 'many',
+    'list', 'show', 'any', 'printer', 'dns',
+})
+# Populated at load time: tokens from every discovered CI name/FQDN.
+# Lets queries mentioning a specific CI name ("webservices-infra") trigger the discovery block
+# even when no generic keyword matches.
+_disco_run_ci_toks: frozenset = frozenset()
 
 
 # ── Client ────────────────────────────────────────────────────────────────────
@@ -310,6 +342,137 @@ def _flatten_mid_server(data: dict) -> list[dict]:
     return sections
 
 
+def _flatten_disco_runs(data: dict) -> list[dict]:
+    """Decompose discovery_runs.json into per-CI + summary searchable documents."""
+    docs: list[dict] = []
+    run      = data.get("latestRun", {})
+    schedule = data.get("schedule",  {})
+    mid      = data.get("midServer", {})
+
+    # Summary document — includes CI-type breakdown so queries like
+    # "what was discovered?" or "any mongodb?" hit this doc via BM25
+    ranges = " ".join(r.get("range", "") for r in schedule.get("ipRanges", []))
+    cis_all = run.get("discoveredCIs", [])
+    type_counts: dict[str, int] = {}
+    for ci in cis_all:
+        t = ci.get("ciTable", "cmdb_ci")
+        type_counts[t] = type_counts.get(t, 0) + 1
+    type_breakdown = " ".join(
+        f"{t.replace('cmdb_ci_', '').replace('dscy_', '').replace('_', ' ')} {n}"
+        for t, n in type_counts.items()
+    )
+    summary_body = " ".join(filter(None, [
+        f"Discovery Run {run.get('number', '')}",
+        f"schedule {schedule.get('name', '')}",
+        f"state {run.get('state', '')}",
+        f"MID Server {mid.get('name', '')} status {mid.get('status', '')}",
+        f"version {mid.get('version', '')}",
+        f"progress {run.get('progress', '')}",
+        f"IP ranges {ranges}",
+        f"discovered CI types {type_breakdown}",
+        f"total {len(cis_all)} CIs",
+    ]))
+    docs.append({
+        "docType":    "run_summary",
+        "title":      f"Discovery Run {run.get('number', '')} — {run.get('state', '')}",
+        "body":       summary_body,
+        "_run":       run,
+        "_schedule":  schedule,
+        "_mid":       mid,
+        "_type_counts": type_counts,
+    })
+
+    # One document per discovered CI
+    for ci in run.get("discoveredCIs", []):
+        table     = ci.get("ciTable", "cmdb_ci")
+        label     = table.replace("cmdb_ci_", "").replace("_", " ")
+        details   = ci.get("classDetails") or {}
+        # Include both key and value so BM25 can match "ram", "cpu", "disk", etc.
+        detail_text = " ".join(
+            f"{k} {v}" for k, v in details.items() if v
+        )
+        rel_text  = " ".join(
+            f"{r.get('relType', '')} {r.get('ciName', '')}"
+            for r in (ci.get("relations") or [])
+        )
+        body = " ".join(filter(None, [
+            ci.get("name", ""),
+            ci.get("ipAddress", ""),
+            ci.get("fqdn", ""),
+            table, label,
+            ci.get("state", ""),
+            detail_text,
+            rel_text,
+            f"run {run.get('number', '')}",
+            f"schedule {schedule.get('name', '')}",
+        ]))
+        docs.append({
+            "docType": "discovered_ci",
+            "title":   f"Discovered CI: {ci.get('name', '?')} ({label}) IP {ci.get('ipAddress', '?')}",
+            "body":    body,
+            "_ci":     ci,
+        })
+
+    return docs
+
+
+def _run_doc_text(doc: dict) -> str:
+    return doc.get("title", "") + " " + doc.get("body", "")
+
+
+def _prose_run_doc(doc: dict) -> str:
+    if doc["docType"] == "run_summary":
+        run          = doc["_run"]
+        schedule     = doc["_schedule"]
+        mid          = doc["_mid"]
+        type_counts  = doc.get("_type_counts", {})
+        ranges       = ", ".join(r.get("range", "") for r in schedule.get("ipRanges", []))
+        ci_count     = len(run.get("discoveredCIs", []))
+        header = (
+            f"**Discovery Run {run.get('number', '?')}** — State: {run.get('state', '?')} | "
+            f"Progress: {run.get('progress', '?')}% | "
+            f"Total CIs: {ci_count} | "
+            f"Schedule: {schedule.get('name', '?')} | IP Ranges: {ranges} | "
+            f"MID Server: {mid.get('name', '?')} ({mid.get('status', '?')}, v{mid.get('version', '?')})"
+        )
+        if type_counts:
+            breakdown = ", ".join(
+                f"{t.replace('cmdb_ci_', '').replace('dscy_', '').replace('_', ' ').title()}: {n}"
+                for t, n in sorted(type_counts.items(), key=lambda x: -x[1])
+            )
+            header += f"\n  CI Types: {breakdown}"
+        return header
+
+    ci    = doc["_ci"]
+    table = ci.get("ciTable", "cmdb_ci")
+    label = table.replace("cmdb_ci_", "").replace("_", " ").title()
+    lines = [
+        f"**{ci.get('name', '?')}** — {label} | "
+        f"IP: {ci.get('ipAddress', '?')} | "
+        f"State: {ci.get('state', '?')}"
+    ]
+    if ci.get("fqdn"):
+        lines[0] += f" | FQDN: {ci['fqdn']}"
+
+    details = ci.get("classDetails") or {}
+    if details:
+        detail_str = " | ".join(
+            f"{k}: {v}" for k, v in list(details.items())[:6] if v
+        )
+        if detail_str:
+            lines.append(f"  Details: {detail_str}")
+
+    rels = ci.get("relations") or []
+    if rels:
+        rel_str = "; ".join(
+            f"{r.get('relType', '')} → {r.get('ciName', '')}"
+            for r in rels[:5]
+        )
+        lines.append(f"  Relations: {rel_str}")
+
+    return "\n".join(lines)
+
+
 # ── Data loading ──────────────────────────────────────────────────────────────
 
 def _read_json(path: Path):
@@ -320,10 +483,12 @@ def _load_data():
     """Load JSON files and build BM25 + semantic indices (runs once on first request)."""
     global _patterns, _classifiers, _credentials, _mid_sections, _mid_raw, _stages, _ire
     global _cmdb_classes, _cmdb_idents, _cmdb_rel_types, _cmdb_recon
+    global _disco_run_docs, _disco_run_raw, _disco_run_ci_toks
     global _pat_bm25, _clf_bm25, _cred_bm25, _mid_bm25
-    global _cmdb_cls_bm25, _cmdb_ident_bm25, _cmdb_rel_bm25, _cmdb_recon_bm25
+    global _cmdb_cls_bm25, _cmdb_ident_bm25, _cmdb_rel_bm25, _cmdb_recon_bm25, _disco_run_bm25
     global _sem_model, _pat_embeddings, _clf_embeddings, _cred_embeddings, _mid_embeddings
     global _cmdb_cls_embeddings, _cmdb_ident_embeddings, _cmdb_rel_embeddings, _cmdb_recon_embeddings
+    global _disco_run_embeddings
 
     if _patterns is not None:
         return
@@ -392,6 +557,29 @@ def _load_data():
         _cmdb_classes = _cmdb_idents = _cmdb_rel_types = _cmdb_recon = []
         LOG.warning("cmdb_classes.json not found — CMDB context will be empty")
 
+    # ── Discovery Runs ──
+    runs_path = _DATA_DIR / "discovery_runs.json"
+    if runs_path.exists():
+        _disco_run_raw  = _read_json(runs_path)
+        _disco_run_docs = _flatten_disco_runs(_disco_run_raw)
+        # Build a set of CI name/FQDN tokens for dynamic keyword matching
+        ci_name_toks: set[str] = set()
+        for doc in _disco_run_docs:
+            if doc["docType"] == "discovered_ci":
+                ci = doc["_ci"]
+                ci_name_toks.update(_tokens(ci.get("name", "")))
+                ci_name_toks.update(_tokens(ci.get("fqdn", "")))
+        _disco_run_ci_toks = frozenset(ci_name_toks)
+        LOG.info(
+            "Loaded %d discovery run documents (%d CI name tokens for dynamic matching)",
+            len(_disco_run_docs), len(_disco_run_ci_toks),
+        )
+    else:
+        _disco_run_raw  = {}
+        _disco_run_docs = []
+        _disco_run_ci_toks = frozenset()
+        LOG.warning("discovery_runs.json not found — discovery run context will be empty")
+
     # ── Tier 1: BM25 indices ──
     try:
         from rank_bm25 import BM25Okapi
@@ -411,11 +599,14 @@ def _load_data():
             _cmdb_rel_bm25 = BM25Okapi([_tokens(_cmdb_rel_doc_text(r)) for r in _cmdb_rel_types])
         if _cmdb_recon:
             _cmdb_recon_bm25 = BM25Okapi([_tokens(_cmdb_recon_doc_text(rd)) for rd in _cmdb_recon])
+        if _disco_run_docs:
+            _disco_run_bm25 = BM25Okapi([_tokens(_run_doc_text(d)) for d in _disco_run_docs])
         LOG.info(
             "BM25 indices built (%d patterns, %d classifiers, %d credentials, %d MID sections, "
-            "%d CMDB classes, %d identifiers, %d rel types, %d recon defs)",
+            "%d CMDB classes, %d identifiers, %d rel types, %d recon defs, %d disco run docs)",
             len(_patterns), len(_classifiers), len(_credentials), len(_mid_sections),
             len(_cmdb_classes), len(_cmdb_idents), len(_cmdb_rel_types), len(_cmdb_recon),
+            len(_disco_run_docs),
         )
     except ImportError:
         LOG.warning("rank-bm25 not installed — falling back to keyword search. Run: pip install rank-bm25")
@@ -466,6 +657,11 @@ def _load_data():
         if _cmdb_recon:
             _cmdb_recon_embeddings = _sem_model.encode(
                 [_cmdb_recon_doc_text(rd) for rd in _cmdb_recon],
+                convert_to_numpy=True, show_progress_bar=False,
+            )
+        if _disco_run_docs:
+            _disco_run_embeddings = _sem_model.encode(
+                [_run_doc_text(d) for d in _disco_run_docs],
                 convert_to_numpy=True, show_progress_bar=False,
             )
         LOG.info("Semantic index ready")
@@ -572,6 +768,10 @@ def _search_cmdb_rel_types(query: str, limit: int = 10) -> list:
 
 def _search_cmdb_recon(query: str, limit: int = 6) -> list:
     return _hybrid_search(query, _cmdb_recon, _cmdb_recon_bm25, _cmdb_recon_embeddings, _cmdb_recon_doc_text, limit)
+
+
+def _search_disco_runs(query: str, limit: int = 8) -> list:
+    return _hybrid_search(query, _disco_run_docs, _disco_run_bm25, _disco_run_embeddings, _run_doc_text, limit)
 
 
 # ── Retrieval query builder (Tier 1) ─────────────────────────────────────────
@@ -914,6 +1114,20 @@ def _build_context(messages: list[dict]) -> str:
         if hits:
             body = "\n".join(_prose_cmdb_recon(rd) for rd in hits)
             parts.append(f"## CMDB Reconciliation Definitions ({len(hits)} matched)\n{body}")
+
+    if (query_toks & _DISCO_RUN_KWORDS or query_toks & _disco_run_ci_toks) and _disco_run_docs:
+        hits = _search_disco_runs(query)
+        if hits:
+            # Always prepend the summary doc (full CI-type breakdown) even if it
+            # didn't rank in the top-N, then append matched CI docs
+            summary_doc  = next((d for d in _disco_run_docs if d["docType"] == "run_summary"), None)
+            ci_hits      = [d for d in hits if d["docType"] == "discovered_ci"]
+            ordered      = ([summary_doc] if summary_doc else []) + ci_hits
+            body = "\n".join(_prose_run_doc(d) for d in ordered)
+            run_num = (_disco_run_raw or {}).get("latestRun", {}).get("number", "?")
+            parts.append(
+                f"## Latest Discovery Run ({run_num}) — {len(ci_hits)} CI(s) matched\n{body}"
+            )
 
     return "\n\n".join(parts)
 

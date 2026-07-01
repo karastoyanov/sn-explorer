@@ -9,6 +9,10 @@ LOG = logging.getLogger(__name__)
 DATA_DIR  = Path(__file__).parent.parent.parent / "scripts" / "data"
 LOCAL_DIR = Path(__file__).parent / "data"   # stages.json, ire.json
 
+# ── discovery runs state ───────────────────────────────────────────────────────
+_runs:       dict | None = None
+_runs_mtime: float       = 0.0
+
 # ── patterns state ─────────────────────────────────────────────────────────────
 _patterns:          list[dict] | None = None
 _by_id:             dict[str, dict]   = {}
@@ -186,6 +190,38 @@ def get_classifier(clf_id):
     if not c:
         return jsonify({"error": "Classifier not found"}), 404
     return jsonify(c)
+
+
+def _load_runs() -> None:
+    global _runs, _runs_mtime
+
+    path = DATA_DIR / "discovery_runs.json"
+    if not path.exists():
+        if _runs is None:
+            LOG.warning(
+                "discovery_runs.json not found. "
+                "Run: python scripts/extract_discovery_logs.py --url ... --user ..."
+            )
+            _runs = {}
+        return
+
+    current_mtime = path.stat().st_mtime
+    if _runs is not None and current_mtime == _runs_mtime:
+        return
+
+    _runs       = json.loads(path.read_text(encoding="utf-8"))
+    _runs_mtime = current_mtime
+    LOG.info("Loaded discovery runs data (run: %s)", _runs.get("latestRun", {}).get("number", "N/A"))
+
+
+@blueprint.route("/runs")
+def get_runs():
+    _load_runs()
+    if not _runs:
+        return jsonify({
+            "meta": None, "midServer": {}, "schedule": {}, "latestRun": {}
+        })
+    return jsonify(_runs)
 
 
 # ── AI chat ────────────────────────────────────────────────────────────────────
