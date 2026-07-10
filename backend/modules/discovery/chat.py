@@ -73,6 +73,10 @@ _MID_KWORDS = frozenset({
     'config.xml', 'cluster', 'affinity', 'pool', 'orchestration',
     'mid.max.threads', 'mid.log.level', 'java', 'jre', 'bundled',
     'down', 'upgrading', 'testing', 'stopped', 'purged',
+    'property', 'properties', 'default', 'defaults', 'sys_properties',
+    'ecc_agent_property', 'shazzam', 'keystore', 'snmp', 'jms', 'jdbc',
+    'ssm', 'kms', 'powershell', 'certificate', 'certificates', 'payload',
+    'discolog', 'servicewatch',
 })
 _CMDB_CLASS_KWORDS = frozenset({
     'cmdb', 'class', 'classes', 'ci', 'extendable', 'principal',
@@ -311,6 +315,20 @@ def _flatten_mid_server(data: dict) -> list[dict]:
     )
     _sec("configuration", "MID Server Configuration config.xml",
          cfg.get("description"), param_text)
+
+    # Properties (ecc_agent_property table — one section per property for precise retrieval)
+    props = data.get("properties", {})
+    for cat in props.get("categories", []):
+        cat_name = cat.get("name", "")
+        for p in cat.get("items", []):
+            body_parts = [
+                f"Category: {cat_name}.",
+                f"Type: {p.get('type', '')}.",
+                f"Default value: {p.get('default') or 'none'}.",
+                p.get("description", ""),
+                p.get("notes", ""),
+            ]
+            _sec(f"prop_{p['name']}", f"MID Server Property: {p['name']}", *body_parts)
 
     # States
     states_text = " ".join(
@@ -750,7 +768,7 @@ def _search_credentials(query: str, limit: int = 5) -> list:
     return _hybrid_search(query, _credentials, _cred_bm25, _cred_embeddings, _cred_doc_text, limit)
 
 
-def _search_mid_sections(query: str, limit: int = 6) -> list:
+def _search_mid_sections(query: str, limit: int = 10) -> list:
     return _hybrid_search(query, _mid_sections, _mid_bm25, _mid_embeddings, _mid_section_doc_text, limit)
 
 
