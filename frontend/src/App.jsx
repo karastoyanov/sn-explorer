@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
 import Navbar from './components/Navbar'
 import ChatPanel from './components/ChatPanel'
+import ReleaseNotesPage from './modules/release_notes/pages/ReleaseNotesPage'
 import Welcome from './modules/discovery/pages/Welcome'
 import DiscoveryStages from './modules/discovery/pages/DiscoveryStages'
 import PatternDetail from './modules/discovery/pages/PatternDetail'
@@ -39,6 +40,9 @@ export default function App() {
               {/* CMDB Explorer */}
               <Route path="/cmdb/ire" element={<IREPage />} />
               <Route path="/cmdb/class-manager" element={<CMDBClassManager />} />
+
+              {/* Release Notes */}
+              <Route path="/release-notes" element={<ReleaseNotesPage />} />
 
               <Route path="*" element={<Navigate to="/discovery" replace />} />
             </Routes>

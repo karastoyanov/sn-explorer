@@ -438,6 +438,39 @@
   }
   .dark .navbar-report-btn:hover { background: rgba(252,211,77,0.12); }
 
+  .navbar-release-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: rgba(37,99,235,0.07);
+    border: 1px solid rgba(37,99,235,0.22);
+    border-radius: 8px;
+    color: #1D4ED8;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s, box-shadow 0.12s;
+    white-space: nowrap;
+    font-family: inherit;
+    flex-shrink: 0;
+  }
+  .dark .navbar-release-btn {
+    background: rgba(96,165,250,0.08);
+    border-color: rgba(96,165,250,0.22);
+    color: #60A5FA;
+  }
+  .navbar-release-btn:hover {
+    background: rgba(37,99,235,0.13);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.15);
+  }
+  .dark .navbar-release-btn:hover { background: rgba(96,165,250,0.14); }
+  .navbar-release-btn.active {
+    background: rgba(37,99,235,0.16);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.15);
+  }
+  .dark .navbar-release-btn.active { background: rgba(96,165,250,0.16); }
+
   .navbar-report-pulse {
     width: 6px;
     height: 6px;
@@ -1044,8 +1077,9 @@
   }
 
   @media (max-width: 639px) {
-    .navbar-ai-btn     { display: none; }
-    .navbar-report-btn { display: none; }
+    .navbar-ai-btn      { display: none; }
+    .navbar-report-btn  { display: none; }
+    .navbar-release-btn { display: none; }
   }
 
   @media (max-width: 639px) {

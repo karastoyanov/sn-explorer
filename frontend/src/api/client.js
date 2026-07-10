@@ -37,6 +37,10 @@ export const modulesApi = {
   getAll: () => get('/modules'),
 }
 
+export const releaseNotesApi = {
+  getAll: () => get('/release-notes'),
+}
+
 export const chatApi = {
   /**
    * Fetch RAG-enriched system prompt from the backend (no API key involved).

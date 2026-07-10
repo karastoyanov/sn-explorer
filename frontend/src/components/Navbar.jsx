@@ -45,6 +45,15 @@ function IconPulse() {
   )
 }
 
+function IconTag() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+      <path d="M2 2h5.5L14 8.5 8.5 14 2 7.5V2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+      <circle cx="5" cy="5" r="1" fill="currentColor"/>
+    </svg>
+  )
+}
+
 function IconChevron() {
   return (
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -150,6 +159,17 @@ export default function Navbar({ onChatOpen }) {
 
         <div style={{ width: 8 }} />
 
+        {/* Release Notes link — hidden on mobile via CSS */}
+        <NavLink
+          to="/release-notes"
+          className={({ isActive }) => `navbar-release-btn${isActive ? ' active' : ''}`}
+        >
+          <IconTag />
+          Release Notes
+        </NavLink>
+
+        <div style={{ width: 8 }} />
+
         {/* AI Assistant button — hidden on mobile via CSS */}
         <button className="navbar-ai-btn" onClick={onChatOpen}>
           <IconChat />
@@ -202,8 +222,16 @@ export default function Navbar({ onChatOpen }) {
               </div>
             ))}
 
-            {/* Footer row: AI btn */}
+            {/* Footer row: Release Notes + AI btn */}
             <div className="navbar-mobile-footer">
+              <NavLink
+                to="/release-notes"
+                className={({ isActive }) => `navbar-release-btn${isActive ? ' active' : ''}`}
+                onClick={closeMobile}
+              >
+                <IconTag />
+                Release Notes
+              </NavLink>
               <button
                 className="navbar-ai-btn"
                 onClick={() => { closeMobile(); onChatOpen() }}
