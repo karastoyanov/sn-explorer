@@ -8,6 +8,7 @@ const SECTIONS = [
   { id: 'network',        label: 'Network & Ports' },
   { id: 'security',       label: 'Security' },
   { id: 'configuration',  label: 'Configuration' },
+  { id: 'properties',     label: 'Properties' },
   { id: 'states',         label: 'MID States' },
   { id: 'clustering',     label: 'Clustering' },
   { id: 'lifecycle',      label: 'Lifecycle' },
@@ -76,6 +77,7 @@ export default function MIDServerPage() {
           {activeId === 'network'        && <NetworkSection data={data.network} />}
           {activeId === 'security'       && <SecuritySection data={data.security} />}
           {activeId === 'configuration'  && <ConfigSection data={data.configuration} />}
+          {activeId === 'properties'     && <PropertiesSection data={data.properties} />}
           {activeId === 'states'         && <StatesSection states={data.states} />}
           {activeId === 'clustering'     && <ClusteringSection data={data.clustering} />}
           {activeId === 'lifecycle'      && <LifecycleSection data={data.lifecycle} />}
@@ -326,6 +328,89 @@ function ConfigSection({ data }) {
           </table>
         </div>
       </div>
+    </div>
+  )
+}
+
+/* ── Properties ───────────────────────────────────────────────────────────── */
+function PropertiesSection({ data }) {
+  const [query, setQuery] = useState('')
+
+  const q = query.trim().toLowerCase()
+  const categories = data.categories
+    .map((cat) => ({
+      ...cat,
+      items: q
+        ? cat.items.filter((p) =>
+            p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q))
+        : cat.items,
+    }))
+    .filter((cat) => cat.items.length > 0)
+
+  const totalCount = data.categories.reduce((n, c) => n + c.items.length, 0)
+  const shownCount = categories.reduce((n, c) => n + c.items.length, 0)
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="card p-4">
+        <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed mb-1">{data.summary}</p>
+        {data.sourceUrl && (
+          <a
+            href={data.sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-[11.5px] text-[#0C9248] dark:text-[#17C068] hover:underline"
+          >
+            ServiceNow documentation ↗
+          </a>
+        )}
+        <div className="flex items-center gap-3 flex-wrap mt-3">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Filter properties by name or description…"
+            className="flex-1 min-w-[220px] px-3 py-2 rounded-lg text-[12.5px] bg-[#F0F5F2] dark:bg-white/[0.04]
+              border border-[#D8E2DC] dark:border-[#1A2C22] text-[#1E3028] dark:text-[#A8C4B8]
+              placeholder:text-[#8CA398] dark:placeholder:text-[#4A6858] focus:outline-none focus:border-[#0C9248] dark:focus:border-[#17C068]"
+          />
+          <span className="text-[11.5px] text-[#506458] dark:text-[#4A6858] whitespace-nowrap">
+            {shownCount} of {totalCount} properties
+          </span>
+        </div>
+      </div>
+
+      {categories.map((cat) => (
+        <div key={cat.id} className="card overflow-hidden">
+          <div className="label-xs px-5 pt-5 pb-3">{cat.name}</div>
+          <div className="flex flex-col divide-y divide-[#E6EDEA] dark:divide-[#1A2C22]">
+            {cat.items.map((p) => (
+              <div key={p.name} className="px-5 py-3.5">
+                <div className="flex items-start justify-between gap-3 flex-wrap mb-1.5">
+                  <span className="mono text-[12px] font-medium text-[#131A15] dark:text-[#E0EAE4] break-all">{p.name}</span>
+                  <span className="badge badge-gray shrink-0 whitespace-nowrap">{p.type}</span>
+                </div>
+                <p className="text-[12.5px] text-[#1E3028] dark:text-[#A8C4B8] leading-relaxed">{p.description}</p>
+                {p.notes && (
+                  <p className="mt-1.5 text-[11.5px] text-[#8CA398] dark:text-[#4A6858] italic leading-relaxed">{p.notes}</p>
+                )}
+                <div className="mt-2 flex items-start gap-2">
+                  <span className="label-xs shrink-0 mt-0.5">Default</span>
+                  {p.default
+                    ? <span className="mono text-[11px] text-[#1E3028] dark:text-[#A8C4B8] break-all">{p.default}</span>
+                    : <span className="text-[11px] text-[#C4D4CC]">—</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {categories.length === 0 && (
+        <div className="card p-6 text-center text-[12.5px] text-[#506458] dark:text-[#4A6858]">
+          No properties match "{query}".
+        </div>
+      )}
     </div>
   )
 }
