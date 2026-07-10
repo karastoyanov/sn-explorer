@@ -25,3 +25,4 @@ backend/modules/service_mapping/data/
 backend/modules/release_notes/data/
 docs/*.png
 docs/*.excalidraw
+backend/modules/release_notes/data/releases_cache.json
